@@ -1,0 +1,41 @@
+import httpx
+from datetime import datetime, timedelta
+from config import FRANKFURTER_BASE_URL
+
+
+async def obtener_precios_forex():
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(
+            f"{FRANKFURTER_BASE_URL}/latest",
+            params={"from": "USD", "to": "JPY,EUR,MXN"}
+        )
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        rates = data.get("rates", {})
+        if not rates:
+            return None
+        return {
+            "USD": {"precio": 1.0, "cambio": 0.0},
+            "JPY": {"precio": rates.get("JPY"), "cambio": 0.0},
+            "EUR": {"precio": rates.get("EUR"), "cambio": 0.0},
+            "MXN": {"precio": rates.get("MXN"), "cambio": 0.0},
+        }
+
+
+async def obtener_historico_forex(moneda: str, dias: int = 30):
+    hoy = datetime.utcnow()
+    inicio = hoy - timedelta(days=dias)
+    periodo = f"{inicio.strftime('%Y-%m-%d')}..{hoy.strftime('%Y-%m-%d')}"
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(
+            f"{FRANKFURTER_BASE_URL}/{periodo}",
+            params={"from": "USD", "to": moneda}
+        )
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        rates = data.get("rates", {})
+        if not rates:
+            return None
+        return [{"fecha": k, "precio": v.get(moneda)} for k, v in rates.items()]

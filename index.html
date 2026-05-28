@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Trading Assistant</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
+    <style>
+        /* ============================================
+           ESTILOS ADICIONALES PARA TRADING
+           ============================================ */
+        
+        /* Selector de monedas */
+        .currency-section {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .currency-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .currency-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+        .currency-btn.active {
+            background-color: #ffffff !important;
+            color: #1b1f22 !important;
+        }
+        
+        /* Precio */
+        .price-box {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.2);
+        }
+        .price-display {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        .price-change.positive { color: #4cff4c; }
+        .price-change.negative { color: #ff4c4c; }
+        
+        /* Semáforo - SEÑAL PRINCIPAL */
+        .semaforo-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .semaforo-container h3 {
+            margin-bottom: 1rem;
+        }
+        .semaforo {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .semaforo-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #2a2a2a;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        .semaforo-item.verde { background: #00ff88; box-shadow: 0 0 25px #00ff88; }
+        .semaforo-item.rojo { background: #ff4444; box-shadow: 0 0 25px #ff4444; }
+        .semaforo-item.amarillo { background: #ffaa00; box-shadow: 0 0 25px #ffaa00; }
+        .senal-texto {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .senal-detalle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+        
+        /* Tarjeta DeepSeek */
+        .deepseek-card {
+            margin: 1rem 0;
+            padding: 1.2rem;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.2);
+            border-left: 4px solid #00ffaa;
+        }
+        
+        /* Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .metric-card {
+            text-align: center;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.2);
+        }
+        .big-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        /* Botones de acción simplificados */
+        .actions {
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        
+        /* Info sistema */
+        .info-sistema {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        .info-sistema h3 {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .info-sistema p {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-bottom: 0.3rem;
+        }
+        
+        /* Radio buttons */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 736px) {
+            .price-display { font-size: 2rem; }
+            .semaforo-item { width: 55px; height: 55px; }
+            .big-number { font-size: 1.5rem; }
+            .senal-texto { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body class="is-preload">
+
+    <div id="wrapper">
+
+        <!-- HEADER -->
+        <header id="header">
+            <div class="logo">
+                <span class="icon solid fa-chart-line"></span>
+            </div>
+            <div class="content">
+                <div class="inner">
+                    <h1>Trading Assistant</h1>
+                    <p>Sistema de análisis financiero <br>
+                    <strong>DeepSeek</strong> (Análisis y Señal)</p>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#analisis">Análisis IA</a></li>
+                    <li><a href="#metricas">Métricas</a></li>
+                    <li><a href="#config">Configuración</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- MAIN -->
+        <div id="main">
+
+            <!-- DASHBOARD (SIN CONTROLES DE SIMULACIÓN) -->
+            <article id="dashboard">
+                <h2 class="major">Dashboard</h2>
+                
+                <!-- Selector de monedas (solo 3) -->
+                <div class="currency-section">
+                    <h3> Seleccionar Moneda</h3>
+                    <div class="currency-buttons">
+                        <button class="button primary currency-btn" data-moneda="USD">🇺🇸 Dólar (USD)</button>
+                        <button class="button currency-btn" data-moneda="MXN">🇲🇽 Peso (MXN)</button>
+                        <button class="button currency-btn" data-moneda="JPY">🇯🇵 Yen (JPY)</button>
+                        <button class="button currency-btn" data-moneda="EUR">🇪🇺 Euro (EUR)</button>
+                    </div>
+                </div>
+
+                <!-- Precio actual -->
+                <div class="price-box">
+                    <h3> Precio Actual</h3>
+                    <div class="price-display" id="precioDisplay">$1.00</div>
+                    <div class="price-change positive" id="cambioDisplay">+0.00%</div>
+                    <p style="font-size: 0.7rem; margin-top: 10px;">Fuente: <strong>Yahoo Finance</strong> (vía yfinance) — <span id="dataTimestamp">—</span></p>
+                </div>
+
+                <!-- Gráfico histórico -->
+                <div style="margin: 2rem 0;">
+                    <canvas id="grafico" style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px;"></canvas>
+                </div>
+
+                <!-- SEMÁFORO - SEÑAL PRINCIPAL DE INVERSIÓN -->
+                <div class="semaforo-container">
+                    <h3> SEÑAL DE INVERSIÓN</h3>
+                    <div class="semaforo">
+                        <div class="semaforo-item" id="semaforoRojo"></div>
+                        <div class="semaforo-item" id="semaforoAmarillo"></div>
+                        <div class="semaforo-item" id="semaforoVerde"></div>
+                    </div>
+                    <div class="senal-texto" id="senalTexto"> ESPERANDO ANÁLISIS...</div>
+                    <div class="senal-detalle" id="senalDetalle">DeepSeek analizando el sentimiento del mercado</div>
+                </div>
+
+                <!-- Botones de acción simplificados -->
+                <ul class="actions">
+                    <li><button id="btnIniciar" class="button primary"> Iniciar Simulación</button></li>
+                    <li><button id="btnPausar" class="button"> Pausar</button></li>
+                    <li><button id="btnReiniciar" class="button"> Reiniciar</button></li>
+                </ul>
+
+                <!-- Fuente de información -->
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">
+                    <i class="fas fa-chart-line"></i> Datos en tiempo real via <strong>Yahoo Finance</strong> (yfinance)
+                </div>
+            </article>
+
+            <!-- ANÁLISIS IA (SOLO DEEPSEEK) -->
+            <article id="analisis">
+                <h2 class="major"> Análisis </h2>
+                
+                <!-- SOLO DEEPSEEK - ANÁLISIS + SEMÁFORO -->
+                <section>
+                    <h3> DeepSeek - Análisis de Sentimiento</h3>
+                    <div class="box deepseek-card" id="deepseekResult">
+                        <p>Inicia la simulación para obtener análisis</p>
+                    </div>
+                </section>
+            </article>
+
+            <!-- MÉTRICAS -->
+            <article id="metricas">
+                <h2 class="major"> Métricas de Rendimiento</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3> Rendimiento</h3>
+                        <div class="big-number" id="rendimiento">+0.0%</div>
+                        <p id="capitalFinal">$10,000.00</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3> Sharpe Ratio</h3>
+                        <div class="big-number" id="sharpe">0.00</div>
+                        <p>Riesgo / Retorno</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3> Drawdown</h3>
+                        <div class="big-number" id="reduccion capital">0.0%</div>
+                        <p>Pérdida máxima</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3> Win Rate</h3>
+                        <div class="big-number" id="tasa de victoria">0%</div>
+                        <p>Operaciones ganadoras</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- CONFIGURACIÓN -->
+            <article id="config">
+                <h2 class="major"> Configuración</h2>
+                
+                <form>
+                    <div class="field">
+                        <label for="modoDemo"> Modo de operación</label>
+                        <select id="modoDemo">
+                            <option value="demo">Modo Demo (Datos simulados)</option>
+                            <option value="real">Modo Real (Conectar a API)</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="intervaloActualizacion"> Intervalo de actualización (ms)</label>
+                        <select id="intervaloActualizacion">
+                            <option value="500">Rápido (500ms)</option>
+                            <option value="1000" selected>Normal (1s)</option>
+                            <option value="2000">Lento (2s)</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="colorTema"> Tema de colores</label>
+                        <select id="colorTema">
+                            <option value="neon" selected>Neon (Azul/Verde)</option>
+                            <option value="morado">Morado/Rosa</option>
+                            <option value="matrix">Matrix (Verde)</option>
+                            <option value="naranja">Naranja/Ámbar</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label> Notificaciones</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="notificaciones" value="si" checked> Activar</label>
+                            <label><input type="radio" name="notificaciones" value="no"> Desactivar</label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label> Sonidos</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="sonidos" value="si"> Activar</label>
+                            <label><input type="radio" name="sonidos" value="no" checked> Desactivar</label>
+                        </div>
+                    </div>
+
+                    <ul class="actions">
+                        <li><button type="button" class="button primary" id="guardarConfig"> Guardar Configuración</button></li>
+                        <li><button type="button" class="button" id="resetConfig"> Restablecer</button></li>
+                    </ul>
+                </form>
+
+                <!-- Info del sistema -->
+                <div class="info-sistema">
+                    <h3> Información del sistema</h3>
+                    <p><strong>Versión:</strong> 2.0.0</p>
+                    <p><strong>Monedas soportadas:</strong> USD (Dólar), MXN (Peso Mexicano), JPY (Yen), EUR (Euro)</p>
+                    <p><strong>Fuente de datos:</strong> Yahoo Finance (vía yfinance)</p>
+                    <p><strong>API:</strong> FastAPI + yfinance</p>
+                    <p><strong>Estado:</strong> <span id="estadoBackend" style="color: #ffaa00;">🔌 Conectando...</span></p>
+                </div>
+            </article>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer id="footer">
+            <p class="copyright">&copy; 2025 Trading Assistant - DeepSeek | Análisis financiero con IA</p>
+        </footer>
+
+    </div>
+
+    <div id="bg"></div>
+
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ============================================
+        // TRADING ASSISTANT — DATOS REALES vía yfinance
+        // ============================================
+        
+        const API_BASE = 'http://localhost:8000';
+        
+        const SIMBOLOS_MONEDA = {
+            'USD': { nombre: 'Dólar', simbolo: '$', bandera: '\uD83C\uDDFA\uD83C\uDDF8' },
+            'MXN': { nombre: 'Peso Mexicano', simbolo: '$', bandera: '\uD83C\uDDF2\uD83C\uDDFD' },
+            'JPY': { nombre: 'Yen', simbolo: '\u00A5', bandera: '\uD83C\uDDEF\uD83C\uDDF5' },
+            'EUR': { nombre: 'Euro', simbolo: '\u20AC', bandera: '\uD83C\uDDEA\uD83C\uDDFA' }
+        };
+        
+        let preciosActuales = { USD: 1.0, JPY: 0, EUR: 0 };
+        let historicoData = [];
+        let miGrafico = null;
+        let monedaActual = 'USD';
+        let simulacionActiva = false;
+        let intervaloSim = null;
+        let diaActual = 0;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarGrafico();
+            inicializarEventos();
+            cargarConfiguracion();
+            verificarBackend();
+            cargarPrecios();
+        });
+        
+        function inicializarGrafico() {
+            const canvas = document.getElementById('grafico');
+            if (!canvas) return;
+            miGrafico = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Precio',
+                        data: [],
+                        borderColor: '#00ffff',
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { labels: { color: '#fff' } } },
+                    scales: {
+                        x: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+        
+        function inicializarEventos() {
+            document.getElementById('btnIniciar').addEventListener('click', iniciarSimulacion);
+            document.getElementById('btnPausar').addEventListener('click', pausarSimulacion);
+            document.getElementById('btnReiniciar').addEventListener('click', reiniciarSimulacion);
+            document.getElementById('guardarConfig').addEventListener('click', guardarConfiguracion);
+            document.getElementById('resetConfig').addEventListener('click', resetearConfiguracion);
+            
+            document.querySelectorAll('.currency-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    seleccionarMoneda(btn.getAttribute('data-moneda'));
+                });
+            });
+            document.querySelector('.currency-btn').classList.add('active');
+        }
+        
+        async function cargarPrecios() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/precios`);
+                const data = await resp.json();
+                if (data.monedas) {
+                    for (const [moneda, info] of Object.entries(data.monedas)) {
+                        preciosActuales[moneda] = info.precio;
+                    }
+                    actualizarPrecioDisplay(monedaActual);
+                }
+                if (data.timestamp) {
+                    const ts = new Date(data.timestamp);
+                    document.getElementById('dataTimestamp').textContent = ts.toLocaleString('es-MX');
+                }
+            } catch (e) {
+                console.log('Error cargando precios:', e);
+            }
+        }
+        
+        function actualizarPrecioDisplay(moneda) {
+            const info = SIMBOLOS_MONEDA[moneda];
+            const precio = preciosActuales[moneda];
+            document.getElementById('precioDisplay').textContent = `${info.simbolo}${precio.toFixed(moneda === 'JPY' ? 3 : 4)}`;
+        }
+        
+        function seleccionarMoneda(moneda) {
+            monedaActual = moneda;
+            actualizarPrecioDisplay(moneda);
+            reiniciarSimulacion();
+        }
+        
+        // ========== SIMULACIÓN CON DATOS REALES ==========
+        async function iniciarSimulacion() {
+            if (simulacionActiva) return;
+            
+            if (monedaActual === 'USD') {
+                mostrarNotificacion('USD es la moneda base. Selecciona JPY o EUR para ver datos históricos', 'error');
+                return;
+            }
+            
+            const btnIniciar = document.getElementById('btnIniciar');
+            btnIniciar.disabled = true;
+            btnIniciar.innerHTML = ' Cargando datos históricos...';
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/historico/${monedaActual}?dias=60`);
+                const data = await resp.json();
+                historicoData = data.datos || [];
+            } catch (e) {
+                console.log('Error cargando histórico:', e);
+                mostrarNotificacion('Error al conectar con el servidor', 'error');
+                btnIniciar.disabled = false;
+                btnIniciar.innerHTML = ' Iniciar Simulación';
+                return;
+            }
+            
+            if (historicoData.length === 0) {
+                mostrarNotificacion('No hay datos históricos disponibles', 'error');
+                btnIniciar.disabled = false;
+                btnIniciar.innerHTML = ' Iniciar Simulación';
+                return;
+            }
+            
+            reiniciarGrafico();
+            
+            let capitalInicial = 10000;
+            let capital = capitalInicial;
+            let acciones = 0;
+            diaActual = 0;
+            simulacionActiva = true;
+            
+            btnIniciar.innerHTML = ' Simulando...';
+            
+            intervaloSim = setInterval(() => {
+                if (diaActual >= historicoData.length) {
+                    finalizarSimulacion(capitalInicial, capital, acciones);
+                    return;
+                }
+                
+                const punto = historicoData[diaActual];
+                const precio = punto.precio;
+                const cambio = diaActual > 0 ? ((precio - historicoData[diaActual - 1].precio) / historicoData[diaActual - 1].precio) : 0;
+                
+                if (cambio > 0 && capital > precio) {
+                    acciones = capital / precio;
+                    capital = 0;
+                }
+                
+                const capitalTotal = capital + (acciones * precio);
+                
+                miGrafico.data.labels.push(punto.fecha);
+                miGrafico.data.datasets[0].data.push(precio);
+                miGrafico.update();
+                
+                diaActual++;
+            }, 150);
+            
+            setTimeout(() => actualizarAnalisis(), 1000);
+        }
+        
+        function finalizarSimulacion(capitalInicial, capital, acciones) {
+            clearInterval(intervaloSim);
+            simulacionActiva = false;
+            
+            const btnIniciar = document.getElementById('btnIniciar');
+            btnIniciar.disabled = false;
+            btnIniciar.innerHTML = ' Iniciar Simulación';
+            
+            if (historicoData.length === 0) return;
+            
+            const precios = historicoData.map(d => d.precio);
+            const precioInicial = precios[0];
+            const precioFinal = precios[precios.length - 1];
+            const rendimiento = ((precioFinal - precioInicial) / precioInicial * 100);
+            
+            document.getElementById('rendimiento').textContent = `${rendimiento >= 0 ? '+' : ''}${rendimiento.toFixed(2)}%`;
+            document.getElementById('capitalFinal').textContent = `${SIMBOLOS_MONEDA[monedaActual].simbolo}${(capital + acciones * precioFinal).toFixed(2)}`;
+            
+            const returns = [];
+            for (let i = 1; i < precios.length; i++) {
+                returns.push((precios[i] - precios[i-1]) / precios[i-1]);
+            }
+            const avgRet = returns.reduce((a, b) => a + b, 0) / returns.length;
+            const stdRet = Math.sqrt(returns.reduce((sum, r) => sum + (r - avgRet) ** 2, 0) / returns.length);
+            const sharpe = stdRet > 0 ? (avgRet / stdRet) * Math.sqrt(252) : 0;
+            document.getElementById('sharpe').textContent = sharpe.toFixed(2);
+            
+            const maxDrawdown = calcularMaxDrawdown(precios);
+            document.getElementById('reduccion capital').textContent = `-${(maxDrawdown * 100).toFixed(1)}%`;
+            
+            const winRate = returns.filter(r => r > 0).length / returns.length * 100;
+            document.getElementById('tasa de victoria').textContent = `${winRate.toFixed(0)}%`;
+            
+            setTimeout(() => actualizarAnalisis(), 500);
+        }
+        
+        function calcularMaxDrawdown(precios) {
+            let maxPrecio = precios[0];
+            let maxDrawdown = 0;
+            for (const p of precios) {
+                if (p > maxPrecio) maxPrecio = p;
+                const drawdown = (maxPrecio - p) / maxPrecio;
+                if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+            }
+            return maxDrawdown;
+        }
+        
+        function pausarSimulacion() {
+            clearInterval(intervaloSim);
+            simulacionActiva = false;
+            document.getElementById('btnIniciar').disabled = false;
+            document.getElementById('btnIniciar').innerHTML = ' Iniciar Simulación';
+        }
+        
+        function reiniciarSimulacion() {
+            clearInterval(intervaloSim);
+            simulacionActiva = false;
+            document.getElementById('btnIniciar').disabled = false;
+            document.getElementById('btnIniciar').innerHTML = ' Iniciar Simulación';
+            reiniciarGrafico();
+            actualizarPrecioDisplay(monedaActual);
+            document.getElementById('rendimiento').textContent = '+0.0%';
+            document.getElementById('capitalFinal').textContent = '$10,000.00';
+            document.getElementById('sharpe').textContent = '0.00';
+            document.getElementById('reduccion capital').textContent = '0.0%';
+            document.getElementById('tasa de victoria').textContent = '0%';
+            resetearSemaforo();
+            document.getElementById('deepseekResult').innerHTML = '<p>Inicia la simulación para obtener análisis</p>';
+        }
+        
+        function reiniciarGrafico() {
+            if (!miGrafico) return;
+            miGrafico.data.labels = [];
+            miGrafico.data.datasets[0].data = [];
+            miGrafico.update();
+        }
+        
+        // ========== SEMÁFORO ==========
+        function actualizarSemaforo(sentimiento, detalle) {
+            const rojo = document.getElementById('semaforoRojo');
+            const amarillo = document.getElementById('semaforoAmarillo');
+            const verde = document.getElementById('semaforoVerde');
+            const texto = document.getElementById('senalTexto');
+            const detalleEl = document.getElementById('senalDetalle');
+            
+            if (!rojo || !amarillo || !verde) return;
+            
+            [rojo, amarillo, verde].forEach(el => el.classList.remove('verde', 'amarillo', 'rojo'));
+            
+            if (sentimiento > 0.3) {
+                verde.classList.add('verde');
+                if (texto) texto.innerHTML = ' SEÑAL: COMPRAR';
+                if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es positivo';
+            } else if (sentimiento < -0.3) {
+                rojo.classList.add('rojo');
+                if (texto) texto.innerHTML = ' SEÑAL: VENDER';
+                if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es negativo';
+            } else {
+                amarillo.classList.add('amarillo');
+                if (texto) texto.innerHTML = ' SEÑAL: MANTENER';
+                if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es neutral';
+            }
+        }
+        
+        function resetearSemaforo() {
+            const rojo = document.getElementById('semaforoRojo');
+            const amarillo = document.getElementById('semaforoAmarillo');
+            const verde = document.getElementById('semaforoVerde');
+            const texto = document.getElementById('senalTexto');
+            const detalleEl = document.getElementById('senalDetalle');
+            
+            if (rojo && amarillo && verde) {
+                [rojo, amarillo, verde].forEach(el => el.classList.remove('verde', 'amarillo', 'rojo'));
+            }
+            if (texto) texto.innerHTML = ' ESPERANDO ANÁLISIS...';
+            if (detalleEl) detalleEl.innerHTML = 'DeepSeek analizando el sentimiento del mercado';
+        }
+        
+        // ========== ANÁLISIS IA ==========
+        function actualizarAnalisis() {
+            const ultimoPrecio = historicoData.length > 0
+                ? historicoData[historicoData.length - 1].precio
+                : preciosActuales[monedaActual];
+            const primerPrecio = historicoData.length > 0 ? historicoData[0].precio : ultimoPrecio;
+            const cambioReal = primerPrecio > 0 ? ((ultimoPrecio - primerPrecio) / primerPrecio * 100) : 0;
+            
+            const sentimiento = cambioReal > 2 ? 0.6 : cambioReal < -2 ? -0.6 : cambioReal > 0.5 ? 0.3 : cambioReal < -0.5 ? -0.3 : 0;
+            
+            let detalle = '';
+            let recomendacion = '';
+            
+            if (sentimiento > 0.3) {
+                detalle = 'El mercado muestra tendencia alcista basada en datos históricos reales.';
+                recomendacion = 'CONSIDERAR COMPRA';
+            } else if (sentimiento < -0.3) {
+                detalle = 'El mercado muestra tendencia bajista basada en datos históricos reales.';
+                recomendacion = 'CONSIDERAR VENTA';
+            } else {
+                detalle = 'El mercado se mantiene estable según los datos históricos.';
+                recomendacion = 'MANTENER POSICIÓN';
+            }
+            
+            actualizarSemaforo(sentimiento, detalle);
+            
+            document.getElementById('deepseekResult').innerHTML = `
+                <div class="deepseek-card">
+                    <p><strong> Análisis de Mercado</strong></p>
+                    <p><strong>Precio actual:</strong> ${SIMBOLOS_MONEDA[monedaActual].simbolo}${ultimoPrecio.toFixed(4)}</p>
+                    <p><strong>Variación:</strong> <span style="color: ${cambioReal >= 0 ? '#4cff4c' : '#ff4c4c'}">${cambioReal >= 0 ? '+' : ''}${cambioReal.toFixed(2)}%</span></p>
+                    <p><strong>Análisis:</strong> ${detalle}</p>
+                    <p><strong>Recomendación:</strong> ${recomendacion}</p>
+                    <p><small> Fuente: Yahoo Finance (yfinance)</small></p>
+                </div>
+            `;
+        }
+        
+        // ========== CONFIGURACIÓN ==========
+        function guardarConfiguracion() {
+            const config = {
+                modoDemo: document.getElementById('modoDemo')?.value || 'demo',
+                intervaloActualizacion: parseInt(document.getElementById('intervaloActualizacion')?.value || '1000'),
+                colorTema: document.getElementById('colorTema')?.value || 'neon',
+                notificaciones: document.querySelector('input[name="notificaciones"]:checked')?.value || 'si',
+                sonidos: document.querySelector('input[name="sonidos"]:checked')?.value || 'no'
+            };
+            localStorage.setItem('tradingConfig', JSON.stringify(config));
+            aplicarConfiguracion(config);
+            mostrarNotificacion(' Configuración guardada');
+        }
+        
+        function resetearConfiguracion() {
+            const modoDemo = document.getElementById('modoDemo');
+            const intervalo = document.getElementById('intervaloActualizacion');
+            const colorTema = document.getElementById('colorTema');
+            
+            if (modoDemo) modoDemo.value = 'demo';
+            if (intervalo) intervalo.value = '1000';
+            if (colorTema) colorTema.value = 'neon';
+            
+            const notifSi = document.querySelector('input[name="notificaciones"][value="si"]');
+            const sonidosNo = document.querySelector('input[name="sonidos"][value="no"]');
+            
+            if (notifSi) notifSi.checked = true;
+            if (sonidosNo) sonidosNo.checked = true;
+            
+            aplicarConfiguracion({ modoDemo: 'demo', intervaloActualizacion: 1000, colorTema: 'neon' });
+            localStorage.removeItem('tradingConfig');
+            mostrarNotificacion(' Configuración restablecida');
+        }
+        
+        function cargarConfiguracion() {
+            const saved = localStorage.getItem('tradingConfig');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    const modoDemo = document.getElementById('modoDemo');
+                    const intervalo = document.getElementById('intervaloActualizacion');
+                    const colorTema = document.getElementById('colorTema');
+                    
+                    if (modoDemo) modoDemo.value = config.modoDemo || 'demo';
+                    if (intervalo) intervalo.value = config.intervaloActualizacion || '1000';
+                    if (colorTema) colorTema.value = config.colorTema || 'neon';
+                    
+                    if (config.notificaciones === 'si') {
+                        const notifSi = document.querySelector('input[name="notificaciones"][value="si"]');
+                        if (notifSi) notifSi.checked = true;
+                    } else {
+                        const notifNo = document.querySelector('input[name="notificaciones"][value="no"]');
+                        if (notifNo) notifNo.checked = true;
+                    }
+                    
+                    if (config.sonidos === 'si') {
+                        const sonidosSi = document.querySelector('input[name="sonidos"][value="si"]');
+                        if (sonidosSi) sonidosSi.checked = true;
+                    } else {
+                        const sonidosNo = document.querySelector('input[name="sonidos"][value="no"]');
+                        if (sonidosNo) sonidosNo.checked = true;
+                    }
+                    
+                    aplicarConfiguracion(config);
+                } catch(e) { console.log('Error cargando configuración'); }
+            }
+        }
+        
+        function aplicarConfiguracion(config) {
+            if (!config) return;
+            if (config.colorTema === 'morado') {
+                document.documentElement.style.setProperty('--primary', '#ff00aa');
+            } else if (config.colorTema === 'matrix') {
+                document.documentElement.style.setProperty('--primary', '#00ff88');
+            } else if (config.colorTema === 'naranja') {
+                document.documentElement.style.setProperty('--primary', '#ffaa00');
+            } else {
+                document.documentElement.style.setProperty('--primary', '#00ffff');
+            }
+        }
+        
+        async function verificarBackend() {
+            const estadoSpan = document.getElementById('estadoBackend');
+            if (!estadoSpan) return;
+            try {
+                const resp = await fetch(`${API_BASE}/api/test`);
+                if (resp.ok) {
+                    const preciosResp = await fetch(`${API_BASE}/api/precios`);
+                    const preciosData = await preciosResp.json();
+                    if (preciosData.monedas) {
+                        for (const [moneda, info] of Object.entries(preciosData.monedas)) {
+                            preciosActuales[moneda] = info.precio;
+                        }
+                        actualizarPrecioDisplay(monedaActual);
+                    }
+                    estadoSpan.innerHTML = ' Conectado (yfinance)';
+                    estadoSpan.style.color = '#4cff4c';
+                } else {
+                    throw new Error('Error');
+                }
+            } catch (e) {
+                estadoSpan.innerHTML = ' No conectado';
+                estadoSpan.style.color = '#ffaa00';
+            }
+        }
+        
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notif = document.createElement('div');
+            notif.textContent = mensaje;
+            notif.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
+                background: ${tipo === 'success' ? '#10b981' : '#3b82f6'};
+                color: white; border-radius: 8px; z-index: 10000;
+                animation: fadeIn 0.3s, fadeOut 0.3s 2.7s forwards;
+            `;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+    </script>
+
+</body>
+</html>
