@@ -125,15 +125,6 @@
                     <p>Sistema de análisis financiero</p>
                 </div>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="#dashboard">Operación</a></li>
-                    <li><a href="#grafica">Gráfica</a></li>
-                    <li><a href="#senal">Señal</a></li>
-                    <li><a href="#analisis">Análisis IA</a></li>
-                    <li><a href="#metricas">Métricas</a></li>
-                </ul>
-            </nav>
             <div class="user-bar" id="userBar" style="display: none;">
                 <button type="button" class="user-trigger" id="userTrigger" aria-expanded="false">
                     <span class="icon solid fa-user"></span>
@@ -395,6 +386,7 @@
         let intervaloSim = null;
         let diaActual = 0;
         let historialSenales = [];
+        let maxCapitalSim = 0;
         let graficoGrande = null;
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -922,6 +914,7 @@
             let capital = monto;
             let acciones = 0;
             let historialCapital = [];
+            maxCapitalSim = monto;
             diaActual = 0;
             simulacionActiva = true;
             
@@ -950,8 +943,9 @@
                     
                     if (prevS5 !== null && prevS20 !== null) {
                         if (prevS5 <= prevS20 && s5 > s20 && capital > 0) {
-                            acciones = capital / precio;
-                            capital = 0;
+                            const fraccion = obtenerFraccionPosicion(monto);
+                            acciones = (capital * fraccion) / precio;
+                            capital = capital * (1 - fraccion);
                             historialSenales.push({ tipo: 'compra', dia: diaActual, precio: precio });
                         } else if (prevS5 >= prevS20 && s5 < s20 && acciones > 0) {
                             capital = acciones * precio;
@@ -961,7 +955,19 @@
                     }
                 }
                 
-                const capitalTotal = capital + (acciones * precio);
+                let capitalTotal = capital + (acciones * precio);
+
+                if (acciones > 0) {
+                    if (capitalTotal > maxCapitalSim) maxCapitalSim = capitalTotal;
+                    if (capitalTotal < maxCapitalSim * (1 - obtenerStopLossPct(monto))) {
+                        capital = acciones * precio;
+                        acciones = 0;
+                        capitalTotal = capital;
+                        historialSenales.push({ tipo: 'stop-loss', dia: diaActual, precio: precio });
+                        mostrarNotificacion('Stop-loss activado: posición vendida automáticamente', 'error');
+                    }
+                }
+
                 historialCapital.push(capitalTotal);
 
                 const infoFrom = SIMBOLOS_MONEDA[monedaFrom];
@@ -1068,6 +1074,19 @@
             setTimeout(() => actualizarAnalisis(precios, rendimiento, sharpe, maxDrawdown * 100, winRate, montoInicial, capitalFinal), 500);
         }
         
+        function obtenerFraccionPosicion(monto) {
+            if (monto >= 50000) return 0.15;
+            if (monto >= 10000) return 0.30;
+            if (monto >= 1000) return 0.60;
+            return 1.0;
+        }
+
+        function obtenerStopLossPct(monto) {
+            if (monto >= 10000) return 0.05;
+            if (monto >= 1000) return 0.10;
+            return 0.15;
+        }
+
         function calcularMaxDrawdown(precios) {
             let maxPrecio = precios[0];
             let maxDrawdown = 0;
@@ -1091,6 +1110,7 @@
             clearInterval(intervaloSim);
             simulacionActiva = false;
             historialSenales = [];
+            maxCapitalSim = 0;
             document.getElementById('btnIniciar').disabled = false;
             document.getElementById('btnIniciar').innerHTML = ' Iniciar Simulación';
             actualizarPrecioDisplay();
