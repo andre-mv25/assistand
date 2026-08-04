@@ -6,166 +6,111 @@
     <title>Trading Assistant</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
-    <style>
-        /* ============================================
-           ESTILOS ADICIONALES PARA TRADING
-           ============================================ */
-        
-        /* Selector de monedas */
-        .currency-section {
-            text-align: center;
-            margin: 1.5rem 0;
-        }
-        .currency-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-        .currency-btn {
-            cursor: pointer;
-            transition: all 0.2s;
-            min-width: 100px;
-        }
-        .currency-btn.active {
-            background-color: #ffffff !important;
-            color: #1b1f22 !important;
-        }
-        
-        /* Precio */
-        .price-box {
-            text-align: center;
-            margin: 2rem 0;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 12px;
-            background: rgba(0,0,0,0.2);
-        }
-        .price-display {
-            font-size: 3rem;
-            font-weight: bold;
-        }
-        .price-change.positive { color: #4cff4c; }
-        .price-change.negative { color: #ff4c4c; }
-        
-        /* Semáforo - SEÑAL PRINCIPAL */
-        .semaforo-container {
-            text-align: center;
-            margin: 2rem 0;
-            padding: 1.5rem;
-            background: rgba(0,0,0,0.3);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .semaforo-container h3 {
-            margin-bottom: 1rem;
-        }
-        .semaforo {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        .semaforo-item {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: #2a2a2a;
-            transition: all 0.3s;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-        }
-        .semaforo-item.verde { background: #00ff88; box-shadow: 0 0 25px #00ff88; }
-        .semaforo-item.rojo { background: #ff4444; box-shadow: 0 0 25px #ff4444; }
-        .semaforo-item.amarillo { background: #ffaa00; box-shadow: 0 0 25px #ffaa00; }
-        .senal-texto {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-        .senal-detalle {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-top: 8px;
-        }
-        
-        /* Tarjeta DeepSeek */
-        .deepseek-card {
-            margin: 1rem 0;
-            padding: 1.2rem;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.2);
-            border-left: 4px solid #00ffaa;
-        }
-        
-        /* Métricas */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-        .metric-card {
-            text-align: center;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            background: rgba(0,0,0,0.2);
-        }
-        .big-number {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-        
-        /* Botones de acción simplificados */
-        .actions {
-            justify-content: center;
-            margin: 1rem 0;
-        }
-        
-        /* Info sistema */
-        .info-sistema {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-        }
-        .info-sistema h3 {
-            font-size: 0.8rem;
-            margin-bottom: 0.5rem;
-        }
-        .info-sistema p {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-bottom: 0.3rem;
-        }
-        
-        /* Radio buttons */
-        .radio-group {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.8rem;
-            margin: 0;
-        }
-        
-        /* Responsive */
-        @media (max-width: 736px) {
-            .price-display { font-size: 2rem; }
-            .semaforo-item { width: 55px; height: 55px; }
-            .big-number { font-size: 1.5rem; }
-            .senal-texto { font-size: 1rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/trading.css?v=5">
 </head>
-<body class="is-preload">
+<body>
+
+    <!-- PANTALLA DE AUTENTICACIÓN -->
+    <div id="authScreen">
+        <div class="auth-bg">
+            <div class="auth-blob blob-1"></div>
+            <div class="auth-blob blob-2"></div>
+            <div class="auth-blob blob-3"></div>
+        </div>
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="icon solid fa-chart-line"></span>
+            </div>
+            <h2>Trading Assistant</h2>
+            <p class="auth-subtitle">Plataforma de análisis financiero</p>
+
+            <!-- VISTA INICIAL: solo dos botones -->
+            <div id="authWelcome" class="auth-welcome">
+                <button type="button" id="btnShowLogin" class="auth-choice">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Iniciar Sesión</span>
+                    <i class="fas fa-chevron-right auth-choice-arrow"></i>
+                </button>
+                <button type="button" id="btnShowRegister" class="auth-choice">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Registrarse</span>
+                    <i class="fas fa-chevron-right auth-choice-arrow"></i>
+                </button>
+            </div>
+
+            <!-- FORMULARIO DE LOGIN -->
+            <form id="loginForm" class="auth-form" style="display: none;" autocomplete="off">
+                <a href="#" class="auth-back" data-back="login">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+                <div class="auth-input-wrap">
+                    <input type="text" id="loginUsername" placeholder="Usuario" class="auth-input">
+                </div>
+                <div class="auth-input-wrap has-toggle">
+                    <input type="password" id="loginPassword" placeholder="Contraseña" class="auth-input" autocomplete="current-password" data-lpignore="true">
+                    <button type="button" class="auth-toggle" data-target="loginPassword" tabindex="-1" aria-label="Mostrar contraseña">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-btn">
+                    <span>Entrar</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="auth-error" id="authError"></div>
+            </form>
+
+            <!-- FORMULARIO DE REGISTRO -->
+            <form id="registerForm" class="auth-form" style="display: none;" autocomplete="off">
+                <a href="#" class="auth-back" data-back="register">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+                <div class="auth-input-wrap">
+                    <input type="text" id="regUsername" placeholder="Usuario (min 3 caracteres)" class="auth-input">
+                </div>
+                <div class="auth-input-wrap">
+                    <input type="email" id="regEmail" placeholder="Email (opcional)" class="auth-input">
+                </div>
+                <div class="auth-input-wrap has-toggle">
+                    <input type="password" id="regPassword" placeholder="Contraseña (min 4 caracteres)" class="auth-input" autocomplete="new-password" data-lpignore="true">
+                    <button type="button" class="auth-toggle" data-target="regPassword" tabindex="-1" aria-label="Mostrar contraseña">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-btn">
+                    <span>Crear cuenta</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="auth-error" id="regError"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE BIENVENIDA -->
+    <div id="welcomeScreen" style="display: none;">
+        <div class="auth-bg">
+            <div class="auth-blob blob-1"></div>
+            <div class="auth-blob blob-2"></div>
+            <div class="auth-blob blob-3"></div>
+        </div>
+        <div class="auth-card welcome-card">
+            <div class="auth-logo">
+                <span class="icon solid fa-chart-line"></span>
+            </div>
+            <h2 id="welcomeTitle">Bienvenido</h2>
+            <p class="welcome-text" id="welcomeTexto" style="display: none;">
+                Trading Assistant es tu centro de operaciones financieras. Simula inversiones en divisas y
+                acciones con dinero virtual, sigue los precios en tiempo real y recibe un análisis automático
+                basado en noticias y una inteligencia artificial que te dice dónde conviene invertir y con
+                qué margen de ganancia. Aprende a operar sin arriesgar tu dinero.
+            </p>
+            <button type="button" id="btnSiguiente" class="auth-btn">
+                <span>Siguiente</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
 
     <div id="wrapper">
 
@@ -177,187 +122,239 @@
             <div class="content">
                 <div class="inner">
                     <h1>Trading Assistant</h1>
-                    <p>Sistema de análisis financiero <br>
-                    <strong>DeepSeek</strong> (Análisis y Señal)</p>
+                    <p>Sistema de análisis financiero</p>
                 </div>
             </div>
             <nav>
                 <ul>
-                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#dashboard">Operación</a></li>
+                    <li><a href="#grafica">Gráfica</a></li>
+                    <li><a href="#senal">Señal</a></li>
                     <li><a href="#analisis">Análisis IA</a></li>
                     <li><a href="#metricas">Métricas</a></li>
-                    <li><a href="#config">Configuración</a></li>
                 </ul>
             </nav>
+            <div class="user-bar" id="userBar" style="display: none;">
+                <button type="button" class="user-trigger" id="userTrigger" aria-expanded="false">
+                    <span class="icon solid fa-user"></span>
+                    <span id="usernameDisplay"></span>
+                    <i class="fas fa-chevron-down user-caret"></i>
+                </button>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <button type="button" id="btnSwitchUser">
+                        <i class="fas fa-exchange-alt"></i> Cambiar de usuario
+                    </button>
+                    <button type="button" id="btnLogout">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
+                </div>
+            </div>
         </header>
 
         <!-- MAIN -->
         <div id="main">
 
-            <!-- DASHBOARD (SIN CONTROLES DE SIMULACIÓN) -->
-            <article id="dashboard">
-                <h2 class="major">Dashboard</h2>
-                
-                <!-- Selector de monedas (solo 3) -->
-                <div class="currency-section">
-                    <h3> Seleccionar Moneda</h3>
-                    <div class="currency-buttons">
-                        <button class="button primary currency-btn" data-moneda="USD">🇺🇸 Dólar (USD)</button>
-                        <button class="button currency-btn" data-moneda="MXN">🇲🇽 Peso (MXN)</button>
-                        <button class="button currency-btn" data-moneda="JPY">🇯🇵 Yen (JPY)</button>
-                        <button class="button currency-btn" data-moneda="EUR">🇪🇺 Euro (EUR)</button>
+            <!-- BLOQUE 1: OPERACIÓN -->
+            <section class="bloque" id="dashboard">
+                <h2 class="major">Operación</h2>
+
+                <div class="dash-controls">
+                    <div class="panel-row">
+                        <div class="panel-field">
+                            <label for="monedaFrom" class="panel-label">De</label>
+                            <select id="monedaFrom" class="panel-select">
+                                <option value="USD">USD</option>
+                                <option value="MXN">MXN</option>
+                                <option value="JPY">JPY</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                        <div class="panel-field">
+                            <label for="monedaTo" class="panel-label">A</label>
+                            <select id="monedaTo" class="panel-select">
+                                <option value="MXN">MXN</option>
+                                <option value="JPY">JPY</option>
+                                <option value="EUR">EUR</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                        <div class="panel-field-wide">
+                            <label for="montoInvertir" class="panel-label">Monto</label>
+                            <input type="number" id="montoInvertir" value="" min="100" step="100" class="panel-input" placeholder="Monto">
+                        </div>
+                    </div>
+                    <ul class="actions">
+                        <li><button id="btnIniciar" class="button primary">Iniciar</button></li>
+                        <li><button id="btnPausar" class="button">Pausar</button></li>
+                        <li><button id="btnReiniciar" class="button">Reiniciar</button></li>
+                    </ul>
+                </div>
+
+                <div class="sim-progress" id="simProgress" style="display: none;">
+                    <div class="sim-progress-info">
+                        <span id="diaActualTexto">Dia 0/0</span>
+                        <span id="simEstadoTexto">Simulando...</span>
+                    </div>
+                    <div class="sim-progress-bar">
+                        <div class="sim-progress-fill" id="simProgressFill" style="width: 0%;"></div>
                     </div>
                 </div>
 
-                <!-- Precio actual -->
-                <div class="price-box">
-                    <h3> Precio Actual</h3>
-                    <div class="price-display" id="precioDisplay">$1.00</div>
-                    <div class="price-change positive" id="cambioDisplay">+0.00%</div>
-                    <p style="font-size: 0.7rem; margin-top: 10px;">Fuente: <strong>Yahoo Finance</strong> (vía yfinance) — <span id="dataTimestamp">—</span></p>
+                <div class="dash-footer">
+                    <span>Datos via <strong>Yahoo Finance</strong></span>
+                    <span>Estado: <strong id="estadoBackend" style="color: #ffaa00;">Conectando...</strong></span>
                 </div>
+            </section>
 
-                <!-- Gráfico histórico -->
-                <div style="margin: 2rem 0;">
-                    <canvas id="grafico" style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px;"></canvas>
+            <!-- BLOQUE 2: GRÁFICA -->
+            <section class="bloque" id="grafica">
+                <h2 class="major">Gráfica de Precios</h2>
+
+                <div class="grafico-container" id="graficoContainer" style="display: none;">
+                    <div class="chart-stats">
+                        <div class="chart-stat">
+                            <span class="chart-stat-label">Tipo de cambio</span>
+                            <span class="chart-stat-value" id="cambioDisplay">—</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="chart-stat-label">Posicion</span>
+                            <span class="chart-stat-value" id="posicionTexto">--</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="chart-stat-label">Capital</span>
+                            <span class="chart-stat-value" id="capitalTexto">--</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="chart-stat-label">Rendimiento</span>
+                            <span class="chart-stat-value" id="rendimientoTexto">--</span>
+                        </div>
+                        <div class="chart-stat" id="generadoDisplay" style="display: none;">
+                            <span class="chart-stat-label">Generado</span>
+                            <span class="chart-stat-value" id="generadoTexto">--</span>
+                        </div>
+                        <div class="chart-stat" id="smaDisplay" style="display: none;">
+                            <span class="chart-stat-label">SMA</span>
+                            <span class="chart-stat-value" id="smaValores">SMA5: <strong id="sma5Val">--</strong> | SMA20: <strong id="sma20Val">--</strong></span>
+                        </div>
+                    </div>
+                    <canvas id="graficoGrande"></canvas>
                 </div>
+            </section>
 
-                <!-- SEMÁFORO - SEÑAL PRINCIPAL DE INVERSIÓN -->
+            <!-- BLOQUE 3: SEÑAL -->
+            <section class="bloque" id="senal">
+                <h2 class="major">Señal de Inversión</h2>
+
                 <div class="semaforo-container">
-                    <h3> SEÑAL DE INVERSIÓN</h3>
                     <div class="semaforo">
                         <div class="semaforo-item" id="semaforoRojo"></div>
                         <div class="semaforo-item" id="semaforoAmarillo"></div>
                         <div class="semaforo-item" id="semaforoVerde"></div>
                     </div>
-                    <div class="senal-texto" id="senalTexto"> ESPERANDO ANÁLISIS...</div>
-                    <div class="senal-detalle" id="senalDetalle">DeepSeek analizando el sentimiento del mercado</div>
+                    <div class="senal-texto" id="senalTexto">Esperando analisis...</div>
+                    <div class="senal-detalle" id="senalDetalle" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- BLOQUE 4: ANÁLISIS IA -->
+            <section class="bloque" id="analisis">
+                <h2 class="major">Análisis IA</h2>
+
+                <div class="box deepseek-card" id="deepseekResult">
+                    <p>Inicia la simulacion para obtener analisis</p>
                 </div>
 
-                <!-- Botones de acción simplificados -->
-                <ul class="actions">
-                    <li><button id="btnIniciar" class="button primary"> Iniciar Simulación</button></li>
-                    <li><button id="btnPausar" class="button"> Pausar</button></li>
-                    <li><button id="btnReiniciar" class="button"> Reiniciar</button></li>
-                </ul>
-
-                <!-- Fuente de información -->
-                <div style="text-align: center; margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">
-                    <i class="fas fa-chart-line"></i> Datos en tiempo real via <strong>Yahoo Finance</strong> (yfinance)
-                </div>
-            </article>
-
-            <!-- ANÁLISIS IA (SOLO DEEPSEEK) -->
-            <article id="analisis">
-                <h2 class="major"> Análisis </h2>
-                
-                <!-- SOLO DEEPSEEK - ANÁLISIS + SEMÁFORO -->
-                <section>
-                    <h3> DeepSeek - Análisis de Sentimiento</h3>
-                    <div class="box deepseek-card" id="deepseekResult">
-                        <p>Inicia la simulación para obtener análisis</p>
+                <div id="analisisExtra" style="display: none;">
+                    <div class="analisis-header">
+                        <span class="sentiment-badge" id="sentimentBadge">NEUTRAL</span>
+                        <span id="recomendacionTexto" style="font-weight: 600;"></span>
                     </div>
-                </section>
-            </article>
 
-            <!-- MÉTRICAS -->
-            <article id="metricas">
-                <h2 class="major"> Métricas de Rendimiento</h2>
-                
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar-label">
+                            <span>Confianza</span>
+                            <span id="confianzaTexto">0%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-bar-fill" id="confianzaBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="fuentes-grid">
+                        <div class="fuente-card">
+                            <span class="fuente-label">VADER Score</span>
+                            <span class="fuente-value" id="vaderScoreDisplay">—</span>
+                        </div>
+                        <div class="fuente-card">
+                            <span class="fuente-label">Total Fuentes</span>
+                            <span class="fuente-value" id="totalFuentesDisplay">0</span>
+                        </div>
+                    </div>
+
+                    <div id="noticiasUsadas" style="display: none;">
+                        <h4>Noticias y Publicaciones Analizadas</h4>
+                        <ul class="news-list" id="newsList"></ul>
+                    </div>
+
+                    <div class="fuentes-externas" style="display: none;" id="fuentesExternas">
+                        <h4>Fuentes de datos</h4>
+                        <div class="fuente-links" id="fuenteLinks"></div>
+                    </div>
+
+                    <div id="opcionesSection" style="display: none;">
+                        <h4>Opciones de Inversion en Divisas</h4>
+                        <div class="opciones-grid" id="opcionesGrid"></div>
+
+                        <h4 style="margin-top: 1.25rem;">Opciones de Acciones</h4>
+                        <div class="opciones-grid" id="opcionesAccionesGrid"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BLOQUE 5: MÉTRICAS -->
+            <section class="bloque" id="metricas">
+                <h2 class="major">Métricas de Rendimiento</h2>
+
                 <div class="metrics-grid">
                     <div class="metric-card">
-                        <h3> Rendimiento</h3>
-                        <div class="big-number" id="rendimiento">+0.0%</div>
+                        <h3>Rendimiento</h3>
+                        <div class="big-number" id="rendimientoVal">+0.0%</div>
                         <p id="capitalFinal">$10,000.00</p>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" id="rendimientoBar" style="width: 50%;"></div>
+                        </div>
                     </div>
                     <div class="metric-card">
-                        <h3> Sharpe Ratio</h3>
-                        <div class="big-number" id="sharpe">0.00</div>
+                        <h3>Sharpe Ratio</h3>
+                        <div class="big-number" id="sharpeVal">0.00</div>
                         <p>Riesgo / Retorno</p>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" id="sharpeBar" style="width: 50%;"></div>
+                        </div>
                     </div>
                     <div class="metric-card">
-                        <h3> Drawdown</h3>
-                        <div class="big-number" id="reduccion capital">0.0%</div>
-                        <p>Pérdida máxima</p>
+                        <h3>Drawdown</h3>
+                        <div class="big-number" id="drawdownVal">0.0%</div>
+                        <p>Perdida maxima</p>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" id="drawdownBar" style="width: 0%;"></div>
+                        </div>
                     </div>
                     <div class="metric-card">
-                        <h3> Win Rate</h3>
-                        <div class="big-number" id="tasa de victoria">0%</div>
+                        <h3>Win Rate</h3>
+                        <div class="big-number" id="winRateVal">0%</div>
                         <p>Operaciones ganadoras</p>
-                    </div>
-                </div>
-            </article>
-
-            <!-- CONFIGURACIÓN -->
-            <article id="config">
-                <h2 class="major"> Configuración</h2>
-                
-                <form>
-                    <div class="field">
-                        <label for="modoDemo"> Modo de operación</label>
-                        <select id="modoDemo">
-                            <option value="demo">Modo Demo (Datos simulados)</option>
-                            <option value="real">Modo Real (Conectar a API)</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label for="intervaloActualizacion"> Intervalo de actualización (ms)</label>
-                        <select id="intervaloActualizacion">
-                            <option value="500">Rápido (500ms)</option>
-                            <option value="1000" selected>Normal (1s)</option>
-                            <option value="2000">Lento (2s)</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label for="colorTema"> Tema de colores</label>
-                        <select id="colorTema">
-                            <option value="neon" selected>Neon (Azul/Verde)</option>
-                            <option value="morado">Morado/Rosa</option>
-                            <option value="matrix">Matrix (Verde)</option>
-                            <option value="naranja">Naranja/Ámbar</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label> Notificaciones</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="notificaciones" value="si" checked> Activar</label>
-                            <label><input type="radio" name="notificaciones" value="no"> Desactivar</label>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" id="winRateBar" style="width: 0%;"></div>
                         </div>
                     </div>
-
-                    <div class="field">
-                        <label> Sonidos</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="sonidos" value="si"> Activar</label>
-                            <label><input type="radio" name="sonidos" value="no" checked> Desactivar</label>
-                        </div>
-                    </div>
-
-                    <ul class="actions">
-                        <li><button type="button" class="button primary" id="guardarConfig"> Guardar Configuración</button></li>
-                        <li><button type="button" class="button" id="resetConfig"> Restablecer</button></li>
-                    </ul>
-                </form>
-
-                <!-- Info del sistema -->
-                <div class="info-sistema">
-                    <h3> Información del sistema</h3>
-                    <p><strong>Versión:</strong> 2.0.0</p>
-                    <p><strong>Monedas soportadas:</strong> USD (Dólar), MXN (Peso Mexicano), JPY (Yen), EUR (Euro)</p>
-                    <p><strong>Fuente de datos:</strong> Yahoo Finance (vía yfinance)</p>
-                    <p><strong>API:</strong> FastAPI + yfinance</p>
-                    <p><strong>Estado:</strong> <span id="estadoBackend" style="color: #ffaa00;">🔌 Conectando...</span></p>
                 </div>
-            </article>
+            </section>
 
         </div>
 
         <!-- FOOTER -->
         <footer id="footer">
-            <p class="copyright">&copy; 2025 Trading Assistant - DeepSeek | Análisis financiero con IA</p>
         </footer>
 
     </div>
@@ -369,16 +366,20 @@
     <script src="assets/js/browser.min.js"></script>
     <script src="assets/js/breakpoints.min.js"></script>
     <script src="assets/js/util.js"></script>
-    <script src="assets/js/main.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        document.body.classList.add('js-ready');
+        document.body.classList.add('auth-locked');
         // ============================================
         // TRADING ASSISTANT — DATOS REALES vía yfinance
         // ============================================
         
         const API_BASE = 'http://localhost:8000';
-        
+
+        function formatearNumero(n, decimals = 2) {
+            return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
         const SIMBOLOS_MONEDA = {
             'USD': { nombre: 'Dólar', simbolo: '$', bandera: '\uD83C\uDDFA\uD83C\uDDF8' },
             'MXN': { nombre: 'Peso Mexicano', simbolo: '$', bandera: '\uD83C\uDDF2\uD83C\uDDFD' },
@@ -386,64 +387,313 @@
             'EUR': { nombre: 'Euro', simbolo: '\u20AC', bandera: '\uD83C\uDDEA\uD83C\uDDFA' }
         };
         
-        let preciosActuales = { USD: 1.0, JPY: 0, EUR: 0 };
+        let preciosActuales = { USD: 1.0, MXN: 0, JPY: 0, EUR: 0 };
         let historicoData = [];
-        let miGrafico = null;
-        let monedaActual = 'USD';
+        let monedaFrom = 'USD';
+        let monedaTo = 'MXN';
         let simulacionActiva = false;
         let intervaloSim = null;
         let diaActual = 0;
+        let historialSenales = [];
+        let graficoGrande = null;
         
         document.addEventListener('DOMContentLoaded', () => {
-            inicializarGrafico();
-            inicializarEventos();
-            cargarConfiguracion();
-            verificarBackend();
-            cargarPrecios();
+            inicializarAuth();
+            verificarSesion();
         });
-        
-        function inicializarGrafico() {
-            const canvas = document.getElementById('grafico');
-            if (!canvas) return;
-            miGrafico = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Precio',
-                        data: [],
-                        borderColor: '#00ffff',
-                        fill: false,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { labels: { color: '#fff' } } },
-                    scales: {
-                        x: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+
+        // ========== AUTENTICACIÓN ==========
+        const TOKEN_KEY = 'trading_assistant_token';
+
+        function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+        function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+
+        function inicializarAuth() {
+            const authScreen = document.getElementById('authScreen');
+            const welcome = document.getElementById('authWelcome');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginError = document.getElementById('authError');
+            const registerError = document.getElementById('regError');
+
+            const mostrarVista = (ocultar, mostrar) => {
+                ocultar.style.display = 'none';
+                mostrar.style.display = 'flex';
+                mostrar.style.animation = 'none';
+                void mostrar.offsetWidth;
+                mostrar.style.animation = '';
+            };
+            const volverInicio = (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'none';
+                loginError.textContent = '';
+                registerError.textContent = '';
+                welcome.style.display = 'flex';
+                welcome.style.animation = 'none';
+                void welcome.offsetWidth;
+                welcome.style.animation = '';
+            };
+
+            document.getElementById('btnShowLogin').addEventListener('click', () => {
+                loginError.textContent = '';
+                registerError.textContent = '';
+                mostrarVista(welcome, loginForm);
+            });
+            document.getElementById('btnShowRegister').addEventListener('click', () => {
+                loginError.textContent = '';
+                registerError.textContent = '';
+                mostrarVista(welcome, registerForm);
+            });
+            document.querySelectorAll('.auth-back').forEach(link => {
+                link.addEventListener('click', volverInicio);
+            });
+
+            document.querySelectorAll('.auth-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const input = document.getElementById(btn.dataset.target);
+                    if (!input) return;
+                    const mostrar = input.type === 'password';
+                    input.type = mostrar ? 'text' : 'password';
+                    btn.innerHTML = mostrar ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+                    input.value = input.value;
+                    input.focus();
+                });
+            });
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const errorEl = loginError;
+                errorEl.textContent = '';
+                if (!username || !password) {
+                    errorEl.textContent = 'Ingresa usuario y contraseña';
+                    return;
+                }
+                try {
+                    const resp = await fetch(`${API_BASE}/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password }),
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        setToken(data.token);
+                        iniciarApp(data.username, false);
+                    } else {
+                        errorEl.textContent = data.error || 'Error al iniciar sesión';
                     }
+                } catch (err) {
+                    errorEl.textContent = 'No se pudo conectar con el servidor';
                 }
             });
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('regUsername').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const password = document.getElementById('regPassword').value;
+                const errorEl = registerError;
+                errorEl.textContent = '';
+                if (!username || !password) {
+                    errorEl.textContent = 'Ingresa usuario y contraseña';
+                    return;
+                }
+                try {
+                    const resp = await fetch(`${API_BASE}/api/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password, email }),
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        setToken(data.token);
+                        iniciarApp(data.username, true);
+                    } else {
+                        errorEl.textContent = data.error || 'Error al registrar';
+                    }
+                } catch (err) {
+                    errorEl.textContent = 'No se pudo conectar con el servidor';
+                }
+            });
+
+            // Menú de usuario desplegable
+            const userBar = document.getElementById('userBar');
+            const userMenu = document.getElementById('userMenu');
+            const userTrigger = document.getElementById('userTrigger');
+
+            const cerrarMenuUsuario = () => {
+                userMenu.style.display = 'none';
+                userTrigger.setAttribute('aria-expanded', 'false');
+                userBar.classList.remove('open');
+            };
+
+            userTrigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const abierto = userMenu.style.display === 'block';
+                if (abierto) {
+                    cerrarMenuUsuario();
+                } else {
+                    userMenu.style.display = 'block';
+                    userTrigger.setAttribute('aria-expanded', 'true');
+                    userBar.classList.add('open');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userBar.contains(e.target)) cerrarMenuUsuario();
+            });
+
+            async function cerrarSesionCompleta() {
+                const token = getToken();
+                try {
+                    await fetch(`${API_BASE}/api/auth/logout?token=${token}`);
+                } catch (err) {}
+                localStorage.removeItem(TOKEN_KEY);
+                cerrarMenuUsuario();
+                mostrarAuth();
+            }
+
+            document.getElementById('btnLogout').addEventListener('click', (e) => {
+                e.preventDefault();
+                cerrarSesionCompleta();
+            });
+
+            document.getElementById('btnSwitchUser').addEventListener('click', (e) => {
+                e.preventDefault();
+                cerrarSesionCompleta();
+            });
+
+            // Terminar sesión al cerrar la página (pestaña/ventana/recarga)
+            window.addEventListener('pagehide', () => {
+                const token = getToken();
+                localStorage.removeItem(TOKEN_KEY);
+                if (token) {
+                    try {
+                        navigator.sendBeacon(`${API_BASE}/api/auth/logout?token=${encodeURIComponent(token)}`);
+                    } catch (err) {}
+                }
+            });
+            window.addEventListener('pageshow', (e) => {
+                if (e.persisted) verificarSesion();
+            });
+
+            document.getElementById('btnSiguiente').addEventListener('click', comenzarOperaciones);
+        }
+
+        function iniciarApp(username, esNuevo) {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('userBar').style.display = 'flex';
+            document.getElementById('usernameDisplay').textContent = username;
+            mostrarBienvenida(username, esNuevo);
+        }
+
+        function mostrarBienvenida(username, esNuevo) {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const titulo = document.getElementById('welcomeTitle');
+            const texto = document.getElementById('welcomeTexto');
+            titulo.textContent = esNuevo ? `Bienvenido, ${username}!` : `Bienvenido de nuevo, ${username}`;
+            texto.style.display = esNuevo ? 'block' : 'none';
+            welcomeScreen.style.display = 'flex';
+            document.body.classList.add('auth-locked');
+            document.getElementById('btnSiguiente').focus();
+        }
+
+        function comenzarOperaciones() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.body.classList.remove('auth-locked');
+            inicializarReveal();
+            inicializarEventos();
+            verificarBackend();
+            cargarPrecios();
+            cargarPar();
+        }
+
+        // ========== HISTORIAL (SOLO BASE DE DATOS) ==========
+        let simulacionGuardada = false;
+
+        function resetearGuardado() {
+            simulacionGuardada = false;
+        }
+
+        async function guardarSimulacion(datos) {
+            if (simulacionGuardada) return;
+            simulacionGuardada = true;
+            try {
+                const resp = await fetch(`${API_BASE}/api/simulaciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: getToken(), ...datos }),
+                });
+                const data = await resp.json();
+            } catch (err) {
+                console.log('Error guardando simulacion:', err);
+            }
+        }
+
+        function mostrarAuth() {
+            document.getElementById('authScreen').style.display = 'flex';
+            document.body.classList.add('auth-locked');
+            document.getElementById('userBar').style.display = 'none';
+        }
+
+        async function verificarSesion() {
+            const token = getToken();
+            if (!token) { mostrarAuth(); return; }
+            try {
+                const resp = await fetch(`${API_BASE}/api/auth/me?token=${token}`);
+                const data = await resp.json();
+                if (data.success) {
+                    iniciarApp(data.username, false);
+                } else {
+                    localStorage.removeItem(TOKEN_KEY);
+                    mostrarAuth();
+                }
+            } catch (err) {
+                mostrarAuth();
+            }
+        }
+
+        // ========== SCROLL REVEAL: cada bloque aparece al hacer scroll ==========
+        function inicializarReveal() {
+            const bloques = document.querySelectorAll('.bloque');
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                bloques.forEach(b => observer.observe(b));
+            } else {
+                bloques.forEach(b => b.classList.add('visible'));
+            }
         }
         
         function inicializarEventos() {
             document.getElementById('btnIniciar').addEventListener('click', iniciarSimulacion);
             document.getElementById('btnPausar').addEventListener('click', pausarSimulacion);
             document.getElementById('btnReiniciar').addEventListener('click', reiniciarSimulacion);
-            document.getElementById('guardarConfig').addEventListener('click', guardarConfiguracion);
-            document.getElementById('resetConfig').addEventListener('click', resetearConfiguracion);
             
-            document.querySelectorAll('.currency-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    seleccionarMoneda(btn.getAttribute('data-moneda'));
-                });
+            document.getElementById('monedaFrom').addEventListener('change', () => {
+                monedaFrom = document.getElementById('monedaFrom').value;
+                cargarPar();
+                reiniciarSimulacion();
             });
-            document.querySelector('.currency-btn').classList.add('active');
+            document.getElementById('monedaTo').addEventListener('change', () => {
+                monedaTo = document.getElementById('monedaTo').value;
+                cargarPar();
+                reiniciarSimulacion();
+            });
+            document.getElementById('montoInvertir').addEventListener('input', () => {
+                cargarPar();
+            });
         }
         
         async function cargarPrecios() {
@@ -454,35 +704,195 @@
                     for (const [moneda, info] of Object.entries(data.monedas)) {
                         preciosActuales[moneda] = info.precio;
                     }
-                    actualizarPrecioDisplay(monedaActual);
                 }
                 if (data.timestamp) {
                     const ts = new Date(data.timestamp);
-                    document.getElementById('dataTimestamp').textContent = ts.toLocaleString('es-MX');
                 }
             } catch (e) {
                 console.log('Error cargando precios:', e);
             }
         }
         
-        function actualizarPrecioDisplay(moneda) {
-            const info = SIMBOLOS_MONEDA[moneda];
-            const precio = preciosActuales[moneda];
-            document.getElementById('precioDisplay').textContent = `${info.simbolo}${precio.toFixed(moneda === 'JPY' ? 3 : 4)}`;
+        async function cargarPar() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/par/${monedaFrom}/${monedaTo}`);
+                const data = await resp.json();
+                if (data.rate) {
+                    const infoFrom = SIMBOLOS_MONEDA[monedaFrom];
+                    const infoTo = SIMBOLOS_MONEDA[monedaTo];
+                    const montoEl = document.getElementById('montoInvertir');
+                    const montoTexto = montoEl && montoEl.value && montoEl.value.trim() !== '' ? montoEl.value : '';
+                    const monto = parseFloat(montoTexto);
+                    if (!isNaN(monto) && monto > 0) {
+                        const convertido = monto * data.rate;
+                        document.getElementById('cambioDisplay').textContent = `${formatearNumero(convertido)} ${monedaTo}`;
+                        document.getElementById('cambioDisplay').className = 'chart-stat-value';
+                    } else {
+                        document.getElementById('cambioDisplay').textContent = `—`;
+                        document.getElementById('cambioDisplay').className = 'chart-stat-value';
+                    }
+                    cargarGraficoGrande();
+                }
+            } catch (e) {
+                console.log('Error cargando par:', e);
+            }
         }
         
-        function seleccionarMoneda(moneda) {
-            monedaActual = moneda;
-            actualizarPrecioDisplay(moneda);
-            reiniciarSimulacion();
+        function dibujarGraficoGrande(precios, limite) {
+            if (typeof Chart === 'undefined') return;
+            const container = document.getElementById('graficoContainer');
+            if (!container || !precios || precios.length < 2) return;
+            container.style.display = 'block';
+
+            const total = precios.length;
+            const visibles = limite !== undefined ? Math.min(Math.max(limite, 2), total) : total;
+            const valores = precios.map(d => typeof d === 'number' ? d : d.precio);
+            const etiquetas = precios.map((d, i) => `D${i + 1}`);
+
+            const sma = (data, periodo) => {
+                const out = [];
+                for (let i = 0; i < data.length; i++) {
+                    if (i < periodo - 1) { out.push(null); continue; }
+                    let sum = 0;
+                    for (let j = i - periodo + 1; j <= i; j++) sum += data[j];
+                    out.push(+(sum / periodo).toFixed(5));
+                }
+                return out;
+            };
+
+            const seriePrecio = valores.map((v, i) => i < visibles ? v : null);
+            const serieSma5 = sma(valores.slice(0, visibles), 5);
+            const serieSma20 = sma(valores.slice(0, visibles), 20);
+            while (serieSma5.length < total) serieSma5.push(null);
+            while (serieSma20.length < total) serieSma20.push(null);
+
+            const ctx = document.getElementById('graficoGrande').getContext('2d');
+
+            if (graficoGrande) {
+                graficoGrande.data.labels = etiquetas;
+                graficoGrande.data.datasets[0].data = seriePrecio;
+                graficoGrande.data.datasets[1].data = serieSma5;
+                graficoGrande.data.datasets[2].data = serieSma20;
+                graficoGrande.update('none');
+                return;
+            }
+
+            graficoGrande = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: etiquetas,
+                    datasets: [
+                        {
+                            label: `${monedaFrom}/${monedaTo}`,
+                            data: seriePrecio,
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0,255,136,0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.2,
+                            fill: true,
+                            spanGaps: false,
+                        },
+                        {
+                            label: 'SMA5',
+                            data: serieSma5,
+                            borderColor: '#4488ff',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.2,
+                            spanGaps: false,
+                        },
+                        {
+                            label: 'SMA20',
+                            data: serieSma20,
+                            borderColor: '#ffaa00',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.2,
+                            spanGaps: false,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    resizeDelay: 0,
+                    animation: { duration: 0 },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: 'rgba(255,255,255,0.85)', boxWidth: 14, boxHeight: 10, padding: 12, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(20,24,27,0.95)',
+                            titleColor: '#fff',
+                            bodyColor: 'rgba(255,255,255,0.85)',
+                            borderColor: 'rgba(255,255,255,0.15)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: (c) => c.dataset.label + ': ' + (c.parsed.y !== null ? c.parsed.y.toFixed(5) : '—'),
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'rgba(255,255,255,0.45)', maxTicksLimit: 14, font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                        },
+                        y: {
+                            ticks: { color: 'rgba(255,255,255,0.45)', font: { size: 10 }, callback: (v) => v.toFixed(4) },
+                            grid: { color: 'rgba(255,255,255,0.08)' },
+                        },
+                    },
+                },
+            });
+        }
+
+        async function cargarGraficoGrande() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/historico_par/${monedaFrom}/${monedaTo}?dias=80`);
+                const data = await resp.json();
+                if (data.datos) dibujarGraficoGrande(data.datos);
+            } catch (e) {
+                console.log('Error cargando gráfico grande:', e);
+            }
+        }
+
+        function actualizarPrecioDisplay() {
+            cargarPar();
         }
         
-        // ========== SIMULACIÓN CON DATOS REALES ==========
+        // ========== SIMULACIÓN CON ESTRATEGIA SMA CROSSOVER ==========
+        function calcularSMA(data, periodo) {
+            const sma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < periodo - 1) { sma.push(null); continue; }
+                let sum = 0;
+                for (let j = i - periodo + 1; j <= i; j++) sum += data[j];
+                sma.push(sum / periodo);
+            }
+            return sma;
+        }
+
         async function iniciarSimulacion() {
             if (simulacionActiva) return;
+            resetearGuardado();
             
-            if (monedaActual === 'USD') {
-                mostrarNotificacion('USD es la moneda base. Selecciona JPY o EUR para ver datos históricos', 'error');
+            if (monedaFrom === monedaTo) {
+                mostrarNotificacion('Selecciona dos monedas diferentes para simular', 'error');
+                return;
+            }
+            
+            const montoInput = document.getElementById('montoInvertir').value;
+            if (!montoInput || montoInput.trim() === '') {
+                mostrarNotificacion('Ingresa un monto para invertir', 'error');
+                return;
+            }
+            const monto = parseFloat(montoInput);
+            if (isNaN(monto) || monto < 0) {
+                mostrarNotificacion('El monto minimo es $0', 'error');
                 return;
             }
             
@@ -491,7 +901,7 @@
             btnIniciar.innerHTML = ' Cargando datos históricos...';
             
             try {
-                const resp = await fetch(`${API_BASE}/api/historico/${monedaActual}?dias=60`);
+                const resp = await fetch(`${API_BASE}/api/historico_par/${monedaFrom}/${monedaTo}?dias=80`);
                 const data = await resp.json();
                 historicoData = data.datos || [];
             } catch (e) {
@@ -502,51 +912,85 @@
                 return;
             }
             
-            if (historicoData.length === 0) {
-                mostrarNotificacion('No hay datos históricos disponibles', 'error');
+            if (historicoData.length < 25) {
+                mostrarNotificacion('No hay suficientes datos históricos disponibles', 'error');
                 btnIniciar.disabled = false;
                 btnIniciar.innerHTML = ' Iniciar Simulación';
                 return;
             }
             
-            reiniciarGrafico();
-            
-            let capitalInicial = 10000;
-            let capital = capitalInicial;
+            let capital = monto;
             let acciones = 0;
+            let historialCapital = [];
             diaActual = 0;
             simulacionActiva = true;
             
-            btnIniciar.innerHTML = ' Simulando...';
+            const precios = historicoData.map(d => d.precio);
+            
+            btnIniciar.innerHTML = 'Simulando...';
+            document.getElementById('simProgress').style.display = 'block';
+            document.getElementById('smaDisplay').style.display = 'flex';
+            document.getElementById('simEstadoTexto').textContent = 'Simulando...';
             
             intervaloSim = setInterval(() => {
-                if (diaActual >= historicoData.length) {
-                    finalizarSimulacion(capitalInicial, capital, acciones);
+                if (diaActual >= precios.length) {
+                    finalizarSimulacion(precios, capital, acciones, historialCapital, monto);
                     return;
                 }
                 
-                const punto = historicoData[diaActual];
-                const precio = punto.precio;
-                const cambio = diaActual > 0 ? ((precio - historicoData[diaActual - 1].precio) / historicoData[diaActual - 1].precio) : 0;
+                const precio = precios[diaActual];
+                const sma5 = calcularSMA(precios.slice(0, diaActual + 1), 5);
+                const sma20 = calcularSMA(precios.slice(0, diaActual + 1), 20);
+                const s5 = sma5[sma5.length - 1];
+                const s20 = sma20[sma20.length - 1];
                 
-                if (cambio > 0 && capital > precio) {
-                    acciones = capital / precio;
-                    capital = 0;
+                if (diaActual >= 20 && s5 !== null && s20 !== null) {
+                    const prevS5 = sma5.length >= 2 ? sma5[sma5.length - 2] : null;
+                    const prevS20 = sma20.length >= 2 ? sma20[sma20.length - 2] : null;
+                    
+                    if (prevS5 !== null && prevS20 !== null) {
+                        if (prevS5 <= prevS20 && s5 > s20 && capital > 0) {
+                            acciones = capital / precio;
+                            capital = 0;
+                            historialSenales.push({ tipo: 'compra', dia: diaActual, precio: precio });
+                        } else if (prevS5 >= prevS20 && s5 < s20 && acciones > 0) {
+                            capital = acciones * precio;
+                            acciones = 0;
+                            historialSenales.push({ tipo: 'venta', dia: diaActual, precio: precio });
+                        }
+                    }
                 }
                 
                 const capitalTotal = capital + (acciones * precio);
-                
-                miGrafico.data.labels.push(punto.fecha);
-                miGrafico.data.datasets[0].data.push(precio);
-                miGrafico.update();
-                
+                historialCapital.push(capitalTotal);
+
+                const infoFrom = SIMBOLOS_MONEDA[monedaFrom];
+                const infoTo = SIMBOLOS_MONEDA[monedaTo];
+                const rend = ((capitalTotal - monto) / monto * 100);
+
+                document.getElementById('posicionTexto').textContent = acciones > 0 ? 'EN POSICIÓN' : 'SIN POSICIÓN';
+                document.getElementById('posicionTexto').style.color = acciones > 0 ? '#00ff88' : '#ffaa00';
+                document.getElementById('capitalTexto').textContent = `${infoTo.simbolo}${capitalTotal.toFixed(2)}`;
+                document.getElementById('rendimientoTexto').textContent = `${rend >= 0 ? '+' : ''}${rend.toFixed(2)}%`;
+                document.getElementById('rendimientoTexto').style.color = rend >= 0 ? '#00ff88' : '#ff4444';
+
+                document.getElementById('diaActualTexto').textContent = `Dia ${diaActual + 1}/${precios.length}`;
+                document.getElementById('simProgressFill').style.width = `${((diaActual + 1) / precios.length * 100).toFixed(0)}%`;
+
+                if (s5 !== null && s20 !== null) {
+                    document.getElementById('sma5Val').textContent = s5.toFixed(4);
+                    document.getElementById('sma20Val').textContent = s20.toFixed(4);
+                }
+
+                dibujarGraficoGrande(precios, diaActual + 1);
+
                 diaActual++;
-            }, 150);
+            }, 100);
             
             setTimeout(() => actualizarAnalisis(), 1000);
         }
         
-        function finalizarSimulacion(capitalInicial, capital, acciones) {
+        function finalizarSimulacion(precios, capital, acciones, historialCapital, montoInicial) {
             clearInterval(intervaloSim);
             simulacionActiva = false;
             
@@ -554,32 +998,74 @@
             btnIniciar.disabled = false;
             btnIniciar.innerHTML = ' Iniciar Simulación';
             
-            if (historicoData.length === 0) return;
+            if (precios.length === 0) return;
             
-            const precios = historicoData.map(d => d.precio);
-            const precioInicial = precios[0];
             const precioFinal = precios[precios.length - 1];
-            const rendimiento = ((precioFinal - precioInicial) / precioInicial * 100);
-            
-            document.getElementById('rendimiento').textContent = `${rendimiento >= 0 ? '+' : ''}${rendimiento.toFixed(2)}%`;
-            document.getElementById('capitalFinal').textContent = `${SIMBOLOS_MONEDA[monedaActual].simbolo}${(capital + acciones * precioFinal).toFixed(2)}`;
-            
+            const capitalFinal = capital + (acciones * precioFinal);
+            const rendimiento = ((capitalFinal - montoInicial) / montoInicial * 100);
+
+            const rendEl = document.getElementById('rendimientoVal');
+            rendEl.textContent = `${rendimiento >= 0 ? '+' : ''}${rendimiento.toFixed(2)}%`;
+            rendEl.className = 'big-number ' + (rendimiento >= 0 ? 'verde' : 'rojo');
+            document.getElementById('capitalFinal').textContent = `${SIMBOLOS_MONEDA[monedaTo].simbolo}${capitalFinal.toFixed(2)}`;
+
+            const rendBar = document.getElementById('rendimientoBar');
+            const rendPct = Math.min(Math.max((rendimiento + 100) / 200 * 100, 0), 100);
+            rendBar.style.width = rendPct + '%';
+            rendBar.className = 'metric-bar-fill ' + (rendimiento >= 0 ? 'verde' : 'rojo');
+
             const returns = [];
-            for (let i = 1; i < precios.length; i++) {
-                returns.push((precios[i] - precios[i-1]) / precios[i-1]);
+            for (let i = 1; i < historialCapital.length; i++) {
+                returns.push((historialCapital[i] - historialCapital[i-1]) / historialCapital[i-1]);
             }
             const avgRet = returns.reduce((a, b) => a + b, 0) / returns.length;
             const stdRet = Math.sqrt(returns.reduce((sum, r) => sum + (r - avgRet) ** 2, 0) / returns.length);
             const sharpe = stdRet > 0 ? (avgRet / stdRet) * Math.sqrt(252) : 0;
-            document.getElementById('sharpe').textContent = sharpe.toFixed(2);
-            
-            const maxDrawdown = calcularMaxDrawdown(precios);
-            document.getElementById('reduccion capital').textContent = `-${(maxDrawdown * 100).toFixed(1)}%`;
-            
+            const sharpeEl = document.getElementById('sharpeVal');
+            sharpeEl.textContent = sharpe.toFixed(2);
+            sharpeEl.className = 'big-number ' + (sharpe >= 1 ? 'verde' : sharpe >= 0 ? 'amarillo' : 'rojo');
+
+            const sharpeBar = document.getElementById('sharpeBar');
+            const sharpePct = Math.min(Math.max((sharpe + 2) / 4 * 100, 0), 100);
+            sharpeBar.style.width = sharpePct + '%';
+            sharpeBar.className = 'metric-bar-fill ' + (sharpe >= 1 ? 'verde' : sharpe >= 0 ? 'amarillo' : 'rojo');
+
+            const maxDrawdown = calcularMaxDrawdown(historialCapital);
+            const ddEl = document.getElementById('drawdownVal');
+            ddEl.textContent = `-${(maxDrawdown * 100).toFixed(1)}%`;
+            ddEl.className = 'big-number ' + (maxDrawdown < 0.1 ? 'verde' : maxDrawdown < 0.25 ? 'amarillo' : 'rojo');
+
+            const ddBar = document.getElementById('drawdownBar');
+            ddBar.style.width = Math.min(maxDrawdown * 100, 100) + '%';
+            ddBar.className = 'metric-bar-fill ' + (maxDrawdown < 0.1 ? 'verde' : maxDrawdown < 0.25 ? 'amarillo' : 'rojo');
+
             const winRate = returns.filter(r => r > 0).length / returns.length * 100;
-            document.getElementById('tasa de victoria').textContent = `${winRate.toFixed(0)}%`;
+            const wrEl = document.getElementById('winRateVal');
+            wrEl.textContent = `${winRate.toFixed(0)}%`;
+            wrEl.className = 'big-number ' + (winRate >= 60 ? 'verde' : winRate >= 40 ? 'amarillo' : 'rojo');
+
+            const wrBar = document.getElementById('winRateBar');
+            wrBar.style.width = Math.min(winRate, 100) + '%';
+            wrBar.className = 'metric-bar-fill ' + (winRate >= 60 ? 'verde' : winRate >= 40 ? 'amarillo' : 'rojo');
             
-            setTimeout(() => actualizarAnalisis(), 500);
+            document.getElementById('simEstadoTexto').textContent = 'Completado';
+            document.getElementById('simProgressFill').style.width = '100%';
+
+            const infoTo = SIMBOLOS_MONEDA[monedaTo];
+            document.getElementById('posicionTexto').textContent = acciones > 0 ? 'EN POSICIÓN' : 'SIN POSICIÓN';
+            document.getElementById('posicionTexto').style.color = acciones > 0 ? '#00ff88' : '#ffaa00';
+            document.getElementById('capitalTexto').textContent = `${infoTo.simbolo}${capitalFinal.toFixed(2)}`;
+            document.getElementById('rendimientoTexto').textContent = `${rendimiento >= 0 ? '+' : ''}${rendimiento.toFixed(2)}%`;
+            document.getElementById('rendimientoTexto').style.color = rendimiento >= 0 ? '#00ff88' : '#ff4444';
+
+            const generado = capitalFinal - montoInicial;
+            const generadoEl = document.getElementById('generadoDisplay');
+            const generadoTexto = document.getElementById('generadoTexto');
+            generadoEl.style.display = 'block';
+            generadoTexto.textContent = `${generado >= 0 ? '+' : '-'}${infoTo.simbolo}${Math.abs(generado).toFixed(2)}`;
+            generadoTexto.style.color = generado >= 0 ? '#00ff88' : '#ff4444';
+
+            setTimeout(() => actualizarAnalisis(precios, rendimiento, sharpe, maxDrawdown * 100, winRate, montoInicial, capitalFinal), 500);
         }
         
         function calcularMaxDrawdown(precios) {
@@ -597,32 +1083,48 @@
             clearInterval(intervaloSim);
             simulacionActiva = false;
             document.getElementById('btnIniciar').disabled = false;
-            document.getElementById('btnIniciar').innerHTML = ' Iniciar Simulación';
+            document.getElementById('btnIniciar').innerHTML = 'Iniciar Simulacion';
+            document.getElementById('simEstadoTexto').textContent = 'Pausado';
         }
         
         function reiniciarSimulacion() {
             clearInterval(intervaloSim);
             simulacionActiva = false;
+            historialSenales = [];
             document.getElementById('btnIniciar').disabled = false;
             document.getElementById('btnIniciar').innerHTML = ' Iniciar Simulación';
-            reiniciarGrafico();
-            actualizarPrecioDisplay(monedaActual);
-            document.getElementById('rendimiento').textContent = '+0.0%';
+            actualizarPrecioDisplay();
+            const resetEls = (id, val, cls) => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = val; el.className = 'big-number ' + cls; }
+            };
+            resetEls('rendimientoVal', '+0.0%', '');
+            resetEls('sharpeVal', '0.00', '');
+            resetEls('drawdownVal', '0.0%', '');
+            resetEls('winRateVal', '0%', '');
             document.getElementById('capitalFinal').textContent = '$10,000.00';
-            document.getElementById('sharpe').textContent = '0.00';
-            document.getElementById('reduccion capital').textContent = '0.0%';
-            document.getElementById('tasa de victoria').textContent = '0%';
+            ['rendimientoBar', 'sharpeBar', 'drawdownBar', 'winRateBar'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.style.width = '0%'; el.className = 'metric-bar-fill'; }
+            });
             resetearSemaforo();
-            document.getElementById('deepseekResult').innerHTML = '<p>Inicia la simulación para obtener análisis</p>';
+            document.getElementById('deepseekResult').innerHTML = '<p>Inicia la simulacion para obtener analisis</p>';
+            document.getElementById('analisisExtra').style.display = 'none';
+            document.getElementById('opcionesSection').style.display = 'none';
+            document.getElementById('opcionesGrid').innerHTML = '';
+            document.getElementById('opcionesAccionesGrid').innerHTML = '';
+            document.getElementById('simProgress').style.display = 'none';
+            document.getElementById('smaDisplay').style.display = 'none';
+            document.getElementById('posicionTexto').textContent = '--';
+            document.getElementById('posicionTexto').style.color = '';
+            document.getElementById('capitalTexto').textContent = '--';
+            document.getElementById('rendimientoTexto').textContent = '--';
+            document.getElementById('rendimientoTexto').style.color = '';
+            document.getElementById('generadoDisplay').style.display = 'none';
+            document.getElementById('generadoTexto').textContent = '--';
+            document.getElementById('montoInvertir').value = '';
         }
-        
-        function reiniciarGrafico() {
-            if (!miGrafico) return;
-            miGrafico.data.labels = [];
-            miGrafico.data.datasets[0].data = [];
-            miGrafico.update();
-        }
-        
+
         // ========== SEMÁFORO ==========
         function actualizarSemaforo(sentimiento, detalle) {
             const rojo = document.getElementById('semaforoRojo');
@@ -635,11 +1137,11 @@
             
             [rojo, amarillo, verde].forEach(el => el.classList.remove('verde', 'amarillo', 'rojo'));
             
-            if (sentimiento > 0.3) {
+            if (sentimiento >= 0.05) {
                 verde.classList.add('verde');
                 if (texto) texto.innerHTML = ' SEÑAL: COMPRAR';
                 if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es positivo';
-            } else if (sentimiento < -0.3) {
+            } else if (sentimiento <= -0.05) {
                 rojo.classList.add('rojo');
                 if (texto) texto.innerHTML = ' SEÑAL: VENDER';
                 if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es negativo';
@@ -664,122 +1166,228 @@
             if (detalleEl) detalleEl.innerHTML = 'DeepSeek analizando el sentimiento del mercado';
         }
         
-        // ========== ANÁLISIS IA ==========
-        function actualizarAnalisis() {
-            const ultimoPrecio = historicoData.length > 0
-                ? historicoData[historicoData.length - 1].precio
-                : preciosActuales[monedaActual];
-            const primerPrecio = historicoData.length > 0 ? historicoData[0].precio : ultimoPrecio;
-            const cambioReal = primerPrecio > 0 ? ((ultimoPrecio - primerPrecio) / primerPrecio * 100) : 0;
-            
-            const sentimiento = cambioReal > 2 ? 0.6 : cambioReal < -2 ? -0.6 : cambioReal > 0.5 ? 0.3 : cambioReal < -0.5 ? -0.3 : 0;
-            
-            let detalle = '';
-            let recomendacion = '';
-            
-            if (sentimiento > 0.3) {
-                detalle = 'El mercado muestra tendencia alcista basada en datos históricos reales.';
-                recomendacion = 'CONSIDERAR COMPRA';
-            } else if (sentimiento < -0.3) {
-                detalle = 'El mercado muestra tendencia bajista basada en datos históricos reales.';
-                recomendacion = 'CONSIDERAR VENTA';
-            } else {
-                detalle = 'El mercado se mantiene estable según los datos históricos.';
-                recomendacion = 'MANTENER POSICIÓN';
-            }
-            
-            actualizarSemaforo(sentimiento, detalle);
-            
-            document.getElementById('deepseekResult').innerHTML = `
-                <div class="deepseek-card">
-                    <p><strong> Análisis de Mercado</strong></p>
-                    <p><strong>Precio actual:</strong> ${SIMBOLOS_MONEDA[monedaActual].simbolo}${ultimoPrecio.toFixed(4)}</p>
-                    <p><strong>Variación:</strong> <span style="color: ${cambioReal >= 0 ? '#4cff4c' : '#ff4c4c'}">${cambioReal >= 0 ? '+' : ''}${cambioReal.toFixed(2)}%</span></p>
-                    <p><strong>Análisis:</strong> ${detalle}</p>
-                    <p><strong>Recomendación:</strong> ${recomendacion}</p>
-                    <p><small> Fuente: Yahoo Finance (yfinance)</small></p>
-                </div>
-            `;
-        }
-        
-        // ========== CONFIGURACIÓN ==========
-        function guardarConfiguracion() {
-            const config = {
-                modoDemo: document.getElementById('modoDemo')?.value || 'demo',
-                intervaloActualizacion: parseInt(document.getElementById('intervaloActualizacion')?.value || '1000'),
-                colorTema: document.getElementById('colorTema')?.value || 'neon',
-                notificaciones: document.querySelector('input[name="notificaciones"]:checked')?.value || 'si',
-                sonidos: document.querySelector('input[name="sonidos"]:checked')?.value || 'no'
-            };
-            localStorage.setItem('tradingConfig', JSON.stringify(config));
-            aplicarConfiguracion(config);
-            mostrarNotificacion(' Configuración guardada');
-        }
-        
-        function resetearConfiguracion() {
-            const modoDemo = document.getElementById('modoDemo');
-            const intervalo = document.getElementById('intervaloActualizacion');
-            const colorTema = document.getElementById('colorTema');
-            
-            if (modoDemo) modoDemo.value = 'demo';
-            if (intervalo) intervalo.value = '1000';
-            if (colorTema) colorTema.value = 'neon';
-            
-            const notifSi = document.querySelector('input[name="notificaciones"][value="si"]');
-            const sonidosNo = document.querySelector('input[name="sonidos"][value="no"]');
-            
-            if (notifSi) notifSi.checked = true;
-            if (sonidosNo) sonidosNo.checked = true;
-            
-            aplicarConfiguracion({ modoDemo: 'demo', intervaloActualizacion: 1000, colorTema: 'neon' });
-            localStorage.removeItem('tradingConfig');
-            mostrarNotificacion(' Configuración restablecida');
-        }
-        
-        function cargarConfiguracion() {
-            const saved = localStorage.getItem('tradingConfig');
-            if (saved) {
-                try {
-                    const config = JSON.parse(saved);
-                    const modoDemo = document.getElementById('modoDemo');
-                    const intervalo = document.getElementById('intervaloActualizacion');
-                    const colorTema = document.getElementById('colorTema');
-                    
-                    if (modoDemo) modoDemo.value = config.modoDemo || 'demo';
-                    if (intervalo) intervalo.value = config.intervaloActualizacion || '1000';
-                    if (colorTema) colorTema.value = config.colorTema || 'neon';
-                    
-                    if (config.notificaciones === 'si') {
-                        const notifSi = document.querySelector('input[name="notificaciones"][value="si"]');
-                        if (notifSi) notifSi.checked = true;
+        // ========== ANÁLISIS IA (VADER + DeepSeek) ==========
+        async function actualizarAnalisis(preciosHist, rendimiento, sharpe, drawdown, winRate, capitalInicial, capitalFinal) {
+            let vaderData = null;
+            try {
+                const vaderResp = await fetch(`${API_BASE}/api/vader?query=forex+OR+trading+OR+divisas+OR+${monedaFrom}+OR+${monedaTo}&cantidad=2000`);
+                vaderData = await vaderResp.json();
+                if (!vaderData.error && vaderData.compound_score !== undefined) {
+                    const vaderLabel = vaderData.clasificacion === 'alta' ? 'ALTA' : vaderData.clasificacion === 'baja' ? 'BAJA' : 'NEUTRAL';
+                    const vaderDisplay = Math.abs(vaderData.compound_score) > 0.7 ? `MUY ${vaderLabel}` : vaderLabel;
+                    actualizarSemaforo(vaderData.compound_score, `VADER: ${vaderDisplay} — basado en ${vaderData.noticias_analizadas} fuentes`);
+
+                    document.getElementById('vaderScoreDisplay').textContent = vaderData.compound_score.toFixed(4);
+                    document.getElementById('vaderScoreDisplay').style.color = vaderData.compound_score >= 0.05 ? '#00ff88' : vaderData.compound_score <= -0.05 ? '#ff4444' : '#ffaa00';
+                    document.getElementById('totalFuentesDisplay').textContent = (vaderData.total_newsapi || 0) + (vaderData.total_google || 0) + (vaderData.total_gnews || 0);
+
+                    const noticiasEl = document.getElementById('newsList');
+                    const noticiasSection = document.getElementById('noticiasUsadas');
+                    noticiasEl.innerHTML = '';
+                    if (vaderData.noticias && vaderData.noticias.length > 0) {
+                        vaderData.noticias.forEach(n => {
+                            const li = document.createElement('li');
+                            const badge = document.createElement('span');
+                            badge.className = 'news-source ' + (n.fuente === 'DOF' ? 'dof' : 'newsapi');
+                            badge.textContent = n.fuente === 'DOF' ? 'DOF' : n.fuente.substring(0, 8);
+                            const title = document.createElement('a');
+                            title.className = 'news-title';
+                            title.textContent = n.titulo;
+                            title.href = n.url || '#';
+                            title.target = '_blank';
+                            title.rel = 'noopener';
+                            li.appendChild(badge);
+                            li.appendChild(title);
+                            noticiasEl.appendChild(li);
+                        });
+                        noticiasSection.style.display = 'block';
                     } else {
-                        const notifNo = document.querySelector('input[name="notificaciones"][value="no"]');
-                        if (notifNo) notifNo.checked = true;
+                        noticiasSection.style.display = 'none';
                     }
-                    
-                    if (config.sonidos === 'si') {
-                        const sonidosSi = document.querySelector('input[name="sonidos"][value="si"]');
-                        if (sonidosSi) sonidosSi.checked = true;
-                    } else {
-                        const sonidosNo = document.querySelector('input[name="sonidos"][value="no"]');
-                        if (sonidosNo) sonidosNo.checked = true;
-                    }
-                    
-                    aplicarConfiguracion(config);
-                } catch(e) { console.log('Error cargando configuración'); }
+
+                    const yahooSymbol = monedaFrom + monedaTo + '=X';
+                    const yahooUrl = 'https://finance.yahoo.com/quote/' + yahooSymbol;
+                    const dofUrl = 'https://www.dof.gob.mx/index.php';
+                    const fuentesLinks = document.getElementById('fuenteLinks');
+                    fuentesLinks.innerHTML = '';
+                    const links = [
+                        { label: 'Yahoo Finance', url: yahooUrl, clase: 'yahoo' },
+                        { label: 'DOF México', url: dofUrl, clase: 'dof-link' },
+                    ];
+                    links.forEach(l => {
+                        const a = document.createElement('a');
+                        a.href = l.url;
+                        a.target = '_blank';
+                        a.rel = 'noopener';
+                        a.className = 'fuente-link ' + l.clase;
+                        a.textContent = l.label;
+                        fuentesLinks.appendChild(a);
+                    });
+                    document.getElementById('fuentesExternas').style.display = 'block';
+                }
+            } catch (e) {
+                console.log('Error obteniendo análisis VADER:', e);
             }
-        }
-        
-        function aplicarConfiguracion(config) {
-            if (!config) return;
-            if (config.colorTema === 'morado') {
-                document.documentElement.style.setProperty('--primary', '#ff00aa');
-            } else if (config.colorTema === 'matrix') {
-                document.documentElement.style.setProperty('--primary', '#00ff88');
-            } else if (config.colorTema === 'naranja') {
-                document.documentElement.style.setProperty('--primary', '#ffaa00');
-            } else {
-                document.documentElement.style.setProperty('--primary', '#00ffff');
+
+            try {
+                const precios = preciosHist || historicoData;
+                const resp = await fetch(`${API_BASE}/api/analizar_historico`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        moneda: `${monedaFrom}/${monedaTo}`,
+                        precios: precios.map((p, i) => typeof p === 'number' ? { fecha: `dia-${i+1}`, precio: p } : p),
+                        capital_inicial: capitalInicial || 0,
+                        capital_final: capitalFinal || 0,
+                        rendimiento: rendimiento || 0,
+                        sharpe: sharpe || 0,
+                        drawdown: drawdown || 0,
+                        win_rate: winRate || 0,
+                        vader: vaderData && !vaderData.error ? {
+                            compound_score: vaderData.compound_score,
+                            clasificacion: vaderData.clasificacion,
+                            noticias_analizadas: vaderData.noticias_analizadas,
+                            noticias: vaderData.noticias || [],
+                        } : null,
+                    }),
+                });
+                const data = await resp.json();
+
+                if (data.error || !data.analisis) {
+                    throw new Error(data.error || 'Análisis no disponible');
+                }
+
+                const ai = data.analisis;
+                const valorSentimiento = ai.valor || 0;
+                const sentimientoLabel = ai.sentimiento === 'alta' ? 'ALTA' : ai.sentimiento === 'baja' ? 'BAJA' : 'NEUTRAL';
+                const sentimientoDisplay = Math.abs(valorSentimiento) > 0.7 ? `MUY ${sentimientoLabel}` : sentimientoLabel;
+
+                actualizarSemaforo(valorSentimiento, `DeepSeek: ${sentimientoDisplay} -- ${ai.analisis?.substring(0, 100)}...`);
+
+                document.getElementById('deepseekResult').innerHTML = `
+                    <p><strong>DeepSeek -- Veredicto Final</strong></p>
+                    <p>${ai.analisis}</p>
+                    <p><small>Basado en Yahoo Finance + VADER (noticias) + DeepSeek</small></p>
+                `;
+
+                const badge = document.getElementById('sentimentBadge');
+                badge.textContent = sentimientoDisplay;
+                badge.className = 'sentiment-badge ' + (ai.sentimiento || 'neutral');
+
+                const confianza = Math.min(Math.max((ai.confianza || 0) * 100, 0), 100);
+                document.getElementById('confianzaTexto').textContent = confianza.toFixed(0) + '%';
+                const bar = document.getElementById('confianzaBar');
+                bar.style.width = confianza + '%';
+                bar.className = 'confidence-bar-fill ' + (ai.sentimiento || 'neutral');
+
+                const recTexto = document.getElementById('recomendacionTexto');
+                const rec = ai.recomendacion || 'MANTENER';
+                recTexto.textContent = rec;
+                recTexto.style.color = rec === 'COMPRAR' ? '#00ff88' : rec === 'VENDER' ? '#ff4444' : '#ffaa00';
+
+                document.getElementById('analisisExtra').style.display = 'block';
+
+                const opciones = ai.opciones || [];
+                const opcionesSection = document.getElementById('opcionesSection');
+                const opcionesGrid = document.getElementById('opcionesGrid');
+                const opcionesAccionesGrid = document.getElementById('opcionesAccionesGrid');
+                const renderOpciones = (lista, contenedor) => {
+                    contenedor.innerHTML = '';
+                    if (lista.length === 0) return;
+                    lista.forEach(op => {
+                        const card = document.createElement('div');
+                        const riesgo = ['bajo', 'medio', 'alto'].includes(op.riesgo) ? op.riesgo : 'medio';
+                        card.className = 'opcion-card riesgo-' + riesgo;
+                        const header = document.createElement('div');
+                        header.className = 'opcion-header';
+                        const titulo = document.createElement('span');
+                        titulo.className = 'opcion-titulo';
+                        titulo.textContent = op.titulo || 'Opcion';
+                        const badge = document.createElement('span');
+                        badge.className = 'opcion-riesgo';
+                        badge.textContent = riesgo.toUpperCase();
+                        header.appendChild(titulo);
+                        header.appendChild(badge);
+                        const accion = document.createElement('div');
+                        accion.className = 'opcion-accion';
+                        accion.textContent = op.accion || '';
+                        const meta = document.createElement('div');
+                        meta.className = 'opcion-meta';
+                        if (op.ticker) {
+                            const tickerSpan = document.createElement('span');
+                            tickerSpan.className = 'opcion-ticker';
+                            tickerSpan.textContent = op.ticker;
+                            meta.appendChild(tickerSpan);
+                            if (op.precio_actual) {
+                                const precioSpan = document.createElement('span');
+                                precioSpan.textContent = 'Precio: $' + op.precio_actual;
+                                meta.appendChild(precioSpan);
+                            }
+                        }
+                        if (op.par) {
+                            const parSpan = document.createElement('span');
+                            parSpan.textContent = 'Par: ' + op.par;
+                            meta.appendChild(parSpan);
+                        }
+                        const retornoSpan = document.createElement('span');
+                        retornoSpan.textContent = 'Retorno esperado: ' + (op.retorno_esperado || '—');
+                        meta.appendChild(retornoSpan);
+                        const razon = document.createElement('p');
+                        razon.className = 'opcion-razon';
+                        razon.textContent = op.razon || '';
+                        card.appendChild(header);
+                        card.appendChild(accion);
+                        card.appendChild(meta);
+                        card.appendChild(razon);
+                        contenedor.appendChild(card);
+                    });
+                };
+                renderOpciones(opciones, opcionesGrid);
+                renderOpciones((ai.opciones_acciones || []).slice(0, 5), opcionesAccionesGrid);
+                if (opciones.length > 0 || (ai.opciones_acciones || []).length > 0) {
+                    opcionesSection.style.display = 'block';
+                } else {
+                    opcionesSection.style.display = 'none';
+                }
+
+                guardarSimulacion({
+                    moneda: `${monedaFrom}/${monedaTo}`,
+                    monto: capitalInicial || 0,
+                    capital_inicial: capitalInicial || 0,
+                    capital_final: capitalFinal || 0,
+                    rendimiento: rendimiento || 0,
+                    sharpe: sharpe || 0,
+                    drawdown: drawdown || 0,
+                    win_rate: winRate || 0,
+                    generado: (capitalFinal || 0) - (capitalInicial || 0),
+                    compound: (vaderData && !vaderData.error ? vaderData.compound_score : 0) || 0,
+                    sentimiento: ai.sentimiento || 'neutral',
+                    recomendacion: ai.recomendacion || 'MANTENER',
+                    confianza: ai.confianza || 0,
+                    analisis: ai.analisis || '',
+                });
+            } catch (e) {
+                console.log('Error en análisis DeepSeek:', e);
+                if (!vaderData || vaderData.error) {
+                    document.getElementById('deepseekResult').innerHTML = `
+                        <div class="deepseek-card">
+                            <p><strong> Análisis no disponible</strong></p>
+                            <p><small> No se pudo obtener análisis de DeepSeek ni VADER</small></p>
+                        </div>
+                    `;
+                } else {
+                    const clasif = vaderData.clasificacion;
+                    const label = clasif === 'alta' ? 'ALTA' : clasif === 'baja' ? 'BAJA' : 'NEUTRAL';
+                    const displayLabel = Math.abs(vaderData.compound_score) > 0.7 ? `MUY ${label}` : label;
+                    document.getElementById('deepseekResult').innerHTML = `
+                        <div class="deepseek-card">
+                            <p><strong> Análisis VADER (DeepSeek no disponible)</strong></p>
+                            <p><strong>Sentimiento:</strong> ${displayLabel} (compound: ${vaderData.compound_score})</p>
+                            <p><strong>Noticias analizadas:</strong> ${vaderData.noticias_analizadas}</p>
+                            <p><small> Basado en noticias financieras vía VADER</small></p>
+                        </div>
+                    `;
+                }
             }
         }
         
@@ -795,7 +1403,7 @@
                         for (const [moneda, info] of Object.entries(preciosData.monedas)) {
                             preciosActuales[moneda] = info.precio;
                         }
-                        actualizarPrecioDisplay(monedaActual);
+                        cargarPar();
                     }
                     estadoSpan.innerHTML = ' Conectado (yfinance)';
                     estadoSpan.style.color = '#4cff4c';

@@ -1,23 +1,40 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGO_URI, MONGO_DB
+from config import MONGO_URI_LOCAL, MONGO_DB
 
 client: AsyncIOMotorClient = None
 db = None
+db_conectado = False
+
 
 async def connect_db():
-    global client, db
-    client = AsyncIOMotorClient(MONGO_URI)
-    db = client[MONGO_DB]
+    global client, db, db_conectado
+
     try:
-        await db.prices.create_index("moneda", unique=False)
-        await db.analisis.create_index("timestamp", expireAfterSeconds=86400)
+        client = AsyncIOMotorClient(MONGO_URI_LOCAL, serverSelectionTimeoutMS=5000)
+        await client.admin.command("ping")
+        db = client[MONGO_DB]
+        db_conectado = True
+        print(f"MongoDB Local conectado: {MONGO_DB}")
     except Exception as e:
-        print(f"Error creating indexes: {e}")
+        print(f"Error MongoDB Local: {e}")
+        client = None
+        db = None
+        db_conectado = False
+
 
 async def close_db():
-    global client
+    global client, db, db_conectado
     if client:
         client.close()
+        client = None
+    db = None
+    db_conectado = False
+    print("MongoDB desconectado")
+
 
 def get_db():
     return db
+
+
+def is_db_connected():
+    return db_conectado

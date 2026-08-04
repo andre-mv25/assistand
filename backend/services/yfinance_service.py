@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 
 PARES_FOREX = {
     "USD": {"ticker": "USD=X", "invertir": False, "decimales": 4},
-    "MXN": {"ticker": "USDMXN=X", "invertir": False, "decimales": 4},
-    "JPY": {"ticker": "USDJPY=X", "invertir": False, "decimales": 3},
-    "EUR": {"ticker": "EURUSD=X", "invertir": True, "decimales": 4},
+    "MXN": {"ticker": "USDMXN=X", "invertir": True, "decimales": 6},
+    "JPY": {"ticker": "USDJPY=X", "invertir": True, "decimales": 6},
+    "EUR": {"ticker": "EURUSD=X", "invertir": False, "decimales": 4},
 }
 
 def _sincrono_obtener_precios():
@@ -67,11 +67,84 @@ def _sincrono_obtener_historico(moneda: str, dias: int = 30):
 
 
 async def obtener_precios_forex():
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, _sincrono_obtener_precios)
+    return await asyncio.to_thread(_sincrono_obtener_precios)
 
 async def obtener_historico_forex(moneda: str, dias: int = 30):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        None, _sincrono_obtener_historico, moneda, dias
-    )
+    return await asyncio.to_thread(_sincrono_obtener_historico, moneda, dias)
+
+
+def _calcular_par(from_curr: str, to_curr: str, precios: dict):
+    usd_from = precios.get(from_curr, {}).get("precio")
+    usd_to = precios.get(to_curr, {}).get("precio")
+    if not usd_from or not usd_to:
+        return None
+    return usd_from / usd_to
+
+
+def _sincrono_obtener_historico_par(from_curr: str, to_curr: str, dias: int = 30):
+    cfg_from = PARES_FOREX.get(from_curr)
+    cfg_to = PARES_FOREX.get(to_curr)
+    if not cfg_from or not cfg_to:
+        return None
+
+    # USD involucrado: usar el ticker directo de la otra moneda
+    if from_curr == "USD":
+        hist = _sincrono_obtener_historico(to_curr, dias)
+        if not hist:
+            return None
+        return [{"fecha": p["fecha"], "precio": round(1.0 / p["precio"], 6)} for p in hist if p["precio"] > 0]
+
+    if to_curr == "USD":
+        hist = _sincrono_obtener_historico(from_curr, dias)
+        return hist  # Ya está en USD por unidad de la moneda FROM
+
+    # Ambos no-USD: descargar ambos y calcular tasa cruzada
+    data_from = yf.download(cfg_from["ticker"], period=f"{dias}d", interval="1d", progress=False)
+    data_to = yf.download(cfg_to["ticker"], period=f"{dias}d", interval="1d", progress=False)
+    if data_from is None or data_to is None or data_from.empty or data_to.empty:
+        return None
+
+    def extraer_serie(data, cfg):
+        close_col = data["Close"]
+        if hasattr(close_col, "columns") and len(close_col.columns) > 0:
+            series = close_col.iloc[:, 0]
+        else:
+            series = close_col
+        result = {}
+        for fecha, valor in series.items():
+            precio = float(valor)
+            if cfg["invertir"] and precio > 0:
+                precio = 1.0 / precio
+            result[fecha.strftime("%Y-%m-%d") if hasattr(fecha, "strftime") else str(fecha)] = precio
+        return result
+
+    usd_from = extraer_serie(data_from, cfg_from)
+    usd_to = extraer_serie(data_to, cfg_to)
+
+    resultado = []
+    for fecha in usd_from:
+        if fecha in usd_to and usd_to[fecha] > 0:
+            resultado.append({
+                "fecha": fecha,
+                "precio": round(usd_from[fecha] / usd_to[fecha], 6),
+            })
+    return resultado if resultado else None
+
+
+async def obtener_precio_par(from_curr: str, to_curr: str):
+    precios = await obtener_precios_forex()
+    if not precios:
+        return None
+    rate = _calcular_par(from_curr.upper(), to_curr.upper(), precios)
+    if rate is None:
+        return None
+    return {
+        "from": from_curr.upper(),
+        "to": to_curr.upper(),
+        "rate": round(rate, 6),
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+async def obtener_historico_par(from_curr: str, to_curr: str, dias: int = 30):
+    return await asyncio.to_thread(_sincrono_obtener_historico_par, from_curr.upper(), to_curr.upper(), dias)
