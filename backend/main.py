@@ -268,60 +268,6 @@ async def get_status():
     }
 
 
-@app.get("/api/db_debug")
-async def db_debug():
-    import socket
-    import ssl
-    import sys
-    import pymongo
-    from config import MONGO_URI_ATLAS
-
-    resultado = {
-        "python": sys.version,
-        "openssl": ssl.OPENSSL_VERSION,
-        "pymongo": pymongo.__version__,
-        "mongo_uri_atlas_configurada": bool(MONGO_URI_ATLAS),
-        "shards": [],
-        "handshakes": [],
-        "ping_atlas": None,
-    }
-
-    if MONGO_URI_ATLAS and MONGO_URI_ATLAS.startswith("mongodb+srv://"):
-        host = MONGO_URI_ATLAS.split("@")[-1].split("/")[0]
-        resultado["srv_host"] = host
-        try:
-            import dns.resolver
-            ans = dns.resolver.resolve(f"_mongodb._tcp.{host}", "SRV")
-            shards = [f"{str(r.target).rstrip('.')}:{r.port}" for r in ans]
-            resultado["shards"] = shards
-        except Exception as e:
-            resultado["srv_error"] = str(e)[:200]
-        else:
-            ctx = ssl.create_default_context()
-            for sh in shards:
-                shost, sport = sh.rsplit(":", 1)
-                try:
-                    with socket.create_connection((shost, int(sport)), timeout=10) as raw:
-                        with ctx.wrap_socket(raw, server_hostname=shost) as tls:
-                            resultado["handshakes"].append({
-                                "host": sh, "ok": True,
-                                "tls": tls.version(), "cipher": tls.cipher()[0],
-                            })
-                except Exception as e:
-                    resultado["handshakes"].append({"host": sh, "ok": False, "error": str(e)[:160]})
-
-    try:
-        from pymongo import MongoClient
-        c = MongoClient(MONGO_URI_ATLAS, serverSelectionTimeoutMS=10000)
-        c.admin.command("ping")
-        resultado["ping_atlas"] = "OK"
-        c.close()
-    except Exception as e:
-        resultado["ping_atlas"] = str(e)[:200]
-
-    return resultado
-
-
 @app.get("/api/noticias")
 async def get_noticias(
     query: str = Query("forex OR trading OR divisas"),
