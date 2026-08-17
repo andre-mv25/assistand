@@ -450,7 +450,7 @@
         // TRADING ASSISTANT — DATOS REALES vía yfinance
         // ============================================
         
-        const API_BASE = 'http://localhost:8000';
+        const API_BASE = window.location.protocol.startsWith('http') ? '' : 'http://localhost:8000';
 
         function formatearNumero(n, decimals = 2) {
             return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
