@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGO_URI_LOCAL, MONGO_DB
+from config import MONGO_URI, MONGO_DB
 
 client: AsyncIOMotorClient = None
 db = None
@@ -8,17 +8,17 @@ db_conectado = False
 
 async def connect_db():
     global client, db, db_conectado
-
+    if not MONGO_URI:
+        print("MONGO_URI no configurada, DB desactivada")
+        return
     try:
-        client = AsyncIOMotorClient(MONGO_URI_LOCAL, serverSelectionTimeoutMS=5000)
+        client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
         await client.admin.command("ping")
         db = client[MONGO_DB]
         db_conectado = True
-        print(f"MongoDB Local conectado: {MONGO_DB}")
+        print(f"MongoDB conectado: {MONGO_DB}")
     except Exception as e:
-        print(f"Error MongoDB Local: {e}")
-        client = None
-        db = None
+        print(f"Error conectando a MongoDB: {e}")
         db_conectado = False
 
 
@@ -27,9 +27,9 @@ async def close_db():
     if client:
         client.close()
         client = None
-    db = None
-    db_conectado = False
-    print("MongoDB desconectado")
+        db = None
+        db_conectado = False
+        print("MongoDB desconectado")
 
 
 def get_db():

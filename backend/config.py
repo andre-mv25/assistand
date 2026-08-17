@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MONGO_URI_LOCAL = os.getenv("MONGO_URI_LOCAL", "mongodb://localhost:27017")
+MONGO_URI_ATLAS = os.getenv("MONGO_URI_ATLAS", "")
 MONGO_DB = os.getenv("MONGO_DB", "trading_assistant")
+
+MONGO_URI = MONGO_URI_ATLAS or MONGO_URI_LOCAL
 
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
-    <link rel="stylesheet" href="assets/css/trading.css?v=5">
+    <link rel="stylesheet" href="assets/css/trading.css?v=7">
 </head>
 <body>
 
@@ -101,7 +101,7 @@
             <h2 id="welcomeTitle">Bienvenido</h2>
             <p class="welcome-text" id="welcomeTexto" style="display: none;">
                 Trading Assistant es tu centro de operaciones financieras. Simula inversiones en divisas y
-                acciones con dinero virtual, sigue los precios en tiempo real y recibe un análisis automático
+                acciones, sigue los precios en tiempo real y recibe un análisis automático
                 basado en noticias y una inteligencia artificial que te dice dónde conviene invertir y con
                 qué margen de ganancia. Aprende a operar sin arriesgar tu dinero.
             </p>
@@ -247,6 +247,91 @@
                 </div>
             </section>
 
+            <!-- BLOQUE 6: COMPARATIVA DE INVERSIÓN -->
+            <section class="bloque" id="comparativa">
+                <h2 class="major">Comparativa de Inversión</h2>
+
+                <div class="comparativa-container">
+                    <div class="comp-metricas">
+                        <div class="comp-card">
+                            <span class="comp-label">Historial previo</span>
+                            <span class="comp-value" id="compHistorialCount">0</span>
+                            <span class="comp-sub" id="compHistorialPromedio">Sin simulaciones aún</span>
+                        </div>
+                        <div class="comp-card">
+                            <span class="comp-label">Mejor rendimiento</span>
+                            <span class="comp-value" id="compMejorRend">—</span>
+                            <span class="comp-sub" id="compMejorDet"></span>
+                        </div>
+                        <div class="comp-card">
+                            <span class="comp-label">Simulación actual</span>
+                            <span class="comp-value" id="compActualRend">—</span>
+                            <span class="comp-sub" id="compActualDet">Inicia una simulación</span>
+                        </div>
+                    </div>
+
+                    <div class="comp-diferencia" id="compDiferencia" style="display: none;"></div>
+
+                    <!-- EXPLICACIÓN DE CÓMO AFECTA EL MONTO -->
+                    <div class="comp-explicador">
+                        <div class="comp-explicador-titulo">
+                            <i class="fas fa-info-circle"></i> ¿Por qué importa cuánto inviertes?
+                        </div>
+                        <p class="comp-explicador-intro">
+                            Si guardas <strong>$1</strong>, <strong>$100</strong> o <strong>$900</strong>, el resultado
+                            es el mismo en porcentaje: la simulación juega igual, solo ganas o pierdes más dinero.
+                            La magia es que a partir de <strong>$1,000</strong> el sistema empieza a arriesgar menos
+                            (usa menos de tu dinero por vez y corta pérdidas más pronto). Esto aplica igual a
+                            <strong>cualquier moneda</strong> (USD/MXN, EUR/JPY, etc.): el monto siempre se mide igual,
+                            lo único que cambia entre monedas es el historial de precios, no esta regla.
+                        </p>
+                        <div class="comp-explicador-grid">
+                            <div class="comp-exp-card">
+                                <span class="comp-exp-rango">$1 a $999</span>
+                                <span class="comp-exp-detalle">Usa <strong>todo</strong> tu dinero</span>
+                                <span class="comp-exp-stop">Pérdida máxima: <strong>15%</strong></span>
+                            </div>
+                            <div class="comp-exp-card">
+                                <span class="comp-exp-rango">$1,000 - $9,999</span>
+                                <span class="comp-exp-detalle">Invierte <strong>60%</strong></span>
+                                <span class="comp-exp-stop">Pérdida máxima: <strong>10%</strong></span>
+                            </div>
+                            <div class="comp-exp-card">
+                                <span class="comp-exp-rango">$10,000 - $49,999</span>
+                                <span class="comp-exp-detalle">Invierte <strong>30%</strong></span>
+                                <span class="comp-exp-stop">Pérdida máxima: <strong>5%</strong></span>
+                            </div>
+                            <div class="comp-exp-card">
+                                <span class="comp-exp-rango">$50,000 o más</span>
+                                <span class="comp-exp-detalle">Invierte <strong>15%</strong></span>
+                                <span class="comp-exp-stop">Pérdida máxima: <strong>5%</strong></span>
+                            </div>
+                        </div>
+                        <p class="comp-explicador-resumen">
+                            Resumen: dentro de un mismo rango, <strong>$1, $100 o $900 dan el mismo rendimiento en %</strong>,
+                            solo cambia el dinero ganado. Al pasar de <strong>$100 a $1,000</strong> el % sí puede ser distinto,
+                            porque el sistema usa menos dinero y corta pérdidas más pronto.
+                        </p>
+                    </div>
+
+                    <div class="comp-vs">
+                        <h4>Actual vs últimas 6 sesiones (base de datos)</h4>
+                        <div class="comp-vs-scroll">
+                            <table class="comp-vs-tabla" id="compVsTabla">
+                                <thead><tr id="compVsHead"></tr></thead>
+                                <tbody id="compVsBody"></tbody>
+                            </table>
+                        </div>
+                        <p class="comp-vs-empty" id="compVsEmpty" style="display: none;">
+                            Inicia una simulación para obtener la comparativa.
+                        </p>
+                        <p class="comp-vs-nota" id="compVsNota">
+                            Esta tabla compara tu simulación actual con tus sesiones anteriores.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             <!-- BLOQUE 4: ANÁLISIS IA -->
             <section class="bloque" id="analisis">
                 <h2 class="major">Análisis IA</h2>
@@ -371,6 +456,10 @@
             return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
+        function clampNum(v, min, max) {
+            return Math.min(max, Math.max(min, v));
+        }
+
         const SIMBOLOS_MONEDA = {
             'USD': { nombre: 'Dólar', simbolo: '$', bandera: '\uD83C\uDDFA\uD83C\uDDF8' },
             'MXN': { nombre: 'Peso Mexicano', simbolo: '$', bandera: '\uD83C\uDDF2\uD83C\uDDFD' },
@@ -388,6 +477,9 @@
         let historialSenales = [];
         let maxCapitalSim = 0;
         let graficoGrande = null;
+        let graficoSource = [];
+        let graficoOffset = 0;
+        let graficoLen = 1; // 1 = mostrar todo el historico; >2 = ventana con zoom
         
         document.addEventListener('DOMContentLoaded', () => {
             inicializarAuth();
@@ -603,6 +695,7 @@
             verificarBackend();
             cargarPrecios();
             cargarPar();
+            cargarComparativa();
         }
 
         // ========== HISTORIAL (SOLO BASE DE DATOS) ==========
@@ -625,6 +718,286 @@
             } catch (err) {
                 console.log('Error guardando simulacion:', err);
             }
+        }
+
+        // ========== COMPARATIVA DE INVERSIÓN (historial previo vs actual) ==========
+        let historialSims = [];
+        let simActualDatos = null;
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, (c) => {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function fmtComp(v) {
+            return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtCompSigned(v) {
+            return (v >= 0 ? '+' : '') + fmtComp(v);
+        }
+
+        function claseRend(v) {
+            return v >= 0.05 ? 'verde' : (v <= -0.05 ? 'rojo' : 'amarillo');
+        }
+
+        async function cargarComparativa() {
+            const token = getToken();
+            if (!token) return;
+            try {
+                const resp = await fetch(`${API_BASE}/api/simulaciones?token=${encodeURIComponent(token)}`);
+                const data = await resp.json();
+                if (data.success && Array.isArray(data.simulaciones)) {
+                    historialSims = data.simulaciones;
+                }
+            } catch (e) {
+                console.log('Error cargando comparativa:', e);
+            }
+            renderizarComparativa();
+        }
+
+        function renderizarComparativa() {
+            const countEl = document.getElementById('compHistorialCount');
+            const promEl = document.getElementById('compHistorialPromedio');
+            const mejorRend = document.getElementById('compMejorRend');
+            const mejorDet = document.getElementById('compMejorDet');
+            const actualRend = document.getElementById('compActualRend');
+            const actualDet = document.getElementById('compActualDet');
+
+            const rends = historialSims.filter(s => typeof s.rendimiento === 'number' && isFinite(s.rendimiento));
+
+            if (countEl) countEl.textContent = historialSims.length;
+            if (rends.length) {
+                const prom = rends.reduce((a, b) => a + b.rendimiento, 0) / rends.length;
+                promEl.innerHTML = `Rendimiento promedio <strong class="${claseRend(prom)}">${fmtCompSigned(prom)}%</strong>`;
+            } else {
+                promEl.innerHTML = 'Sin simulaciones guardadas';
+            }
+
+            let best = null;
+            for (const s of historialSims) {
+                if (typeof s.rendimiento === 'number' && isFinite(s.rendimiento) &&
+                    (!best || s.rendimiento > best.rendimiento)) best = s;
+            }
+            if (best) {
+                mejorRend.textContent = fmtCompSigned(best.rendimiento) + '%';
+                mejorRend.className = 'comp-value ' + claseRend(best.rendimiento);
+                mejorDet.textContent = `${escapeHtml(best.moneda || '')} · ${escapeHtml(best.recomendacion || '')}`;
+            } else {
+                mejorRend.textContent = '—';
+                mejorRend.className = 'comp-value';
+                mejorDet.textContent = '';
+            }
+
+            if (simActualDatos) {
+                const r = simActualDatos.rendimiento;
+                actualRend.textContent = fmtCompSigned(r) + '%';
+                actualRend.className = 'comp-value ' + claseRend(r);
+                actualDet.textContent = `${escapeHtml(simActualDatos.moneda || '')} · Monto ${fmtComp(simActualDatos.monto || 0)}`;
+            } else {
+                actualRend.textContent = '—';
+                actualRend.className = 'comp-value';
+                actualDet.textContent = 'Inicia una simulación';
+            }
+
+            renderComparativaTabla();
+            actualizarDiferencia();
+        }
+
+        function claseSharpe(v) {
+            return v >= 1 ? 'verde' : (v >= 0 ? 'amarillo' : 'rojo');
+        }
+
+        function claseRec(r) {
+            const u = String(r || '').toUpperCase();
+            return u === 'COMPRAR' ? 'verde' : (u === 'VENDER' ? 'rojo' : 'amarillo');
+        }
+
+        function renderComparativaTabla() {
+            const head = document.getElementById('compVsHead');
+            const body = document.getElementById('compVsBody');
+            const tabla = document.getElementById('compVsTabla');
+            const empty = document.getElementById('compVsEmpty');
+            if (!head || !body || !tabla || !empty) return;
+
+            const cols = [];
+            if (simActualDatos && simActualDatos.monto > 0) {
+                cols.push({ tipo: 'actual', datos: simActualDatos });
+            }
+            let yaDuplicada = false;
+            for (const s of historialSims) {
+                if (cols.length >= 7) break;
+                if (s) {
+                    if (!yaDuplicada && simActualDatos &&
+                        s.moneda === simActualDatos.moneda &&
+                        Math.abs((s.rendimiento || 0) - (simActualDatos.rendimiento || 0)) < 0.0001 &&
+                        Math.abs((s.monto || 0) - (simActualDatos.monto || 0)) < 0.0001) {
+                        yaDuplicada = true;
+                        continue;
+                    }
+                    cols.push({ tipo: 'hist', datos: s });
+                }
+            }
+
+            if (!cols.length) {
+                tabla.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            tabla.style.display = 'table';
+            empty.style.display = 'none';
+
+            let thead = '<th class="comp-concepto-th">Concepto</th>';
+            cols.forEach((c, i) => {
+                const etiqueta = c.tipo === 'actual' ? 'ACTUAL' : `Sim ${i}`;
+                thead += `<th class="${c.tipo === 'actual' ? 'comp-th-actual' : ''}">${etiqueta}</th>`;
+            });
+            head.innerHTML = thead;
+
+            const simboloDe = (d) => {
+                const to = (d.moneda || '').split('/')[1];
+                return (SIMBOLOS_MONEDA[to] || {}).simbolo || '$';
+            };
+            const numD = (v) => (typeof v === 'number' && isFinite(v)) ? fmtComp(v) : '—';
+            const pctD = (v) => (typeof v === 'number' && isFinite(v)) ? `${fmtCompSigned(v)}%` : '—';
+
+            const filas = [
+                ['Par', (d) => escapeHtml(d.moneda || '—')],
+                ['Monto', (d) => `${simboloDe(d)}${numD(d.monto)}`],
+                ['Capital inicial', (d) => `${simboloDe(d)}${numD(d.capital_inicial)}`],
+                ['Capital final', (d) => `${simboloDe(d)}${numD(d.capital_final)}`],
+                ['Rendimiento', (d) => `<span class="${claseRend(d.rendimiento || 0)}">${pctD(d.rendimiento)}</span>`],
+                ['Generado', (d) => `<span class="${(d.generado || 0) >= 0 ? 'verde' : 'rojo'}">${simboloDe(d)}${fmtCompSigned(d.generado || 0)}</span>`],
+                ['Sharpe', (d) => `<span class="${claseSharpe(d.sharpe || 0)}">${typeof d.sharpe === 'number' ? d.sharpe.toFixed(2) : '—'}</span>`],
+                ['Drawdown', (d) => typeof d.drawdown === 'number' ? `${fmtComp(-Math.abs(d.drawdown))}%` : '—'],
+                ['Win rate', (d) => typeof d.win_rate === 'number' ? `${fmtComp(d.win_rate)}%` : '—'],
+                ['Recomendación', (d) => d.recomendacion ? `<span class="${claseRec(d.recomendacion)}">${escapeHtml(d.recomendacion)}</span>` : '—'],
+            ];
+            let bodyHtml = '';
+            filas.forEach(([concepto, fn]) => {
+                bodyHtml += `<tr><td class="comp-concepto-th">${concepto}</td>`;
+                cols.forEach(c => {
+                    bodyHtml += `<td class="${c.tipo === 'actual' ? 'comp-td-actual' : ''}">${fn(c.datos)}</td>`;
+                });
+                bodyHtml += '</tr>';
+            });
+            body.innerHTML = bodyHtml;
+            generarNotaComparativa(cols);
+        }
+
+        function generarNotaComparativa(cols) {
+            const notaEl = document.getElementById('compVsNota');
+            if (!notaEl) return;
+
+            const para = (v) => (typeof v === 'number' && isFinite(v)) ? v : null;
+            const hist = cols.filter(c => c.tipo === 'hist').map(c => c.datos);
+            const actual = cols.find(c => c.tipo === 'actual');
+            const a = actual ? actual.datos : null;
+
+            const partes = [];
+            const rends = hist.map(s => para(s.rendimiento)).filter(v => v !== null);
+
+            if (a) {
+                const rAct = para(a.rendimiento);
+                const rendNombre = a.moneda || 'la simulación';
+                if (rAct !== null && rends.length) {
+                    const prom = rends.reduce((x, y) => x + y, 0) / rends.length;
+                    if (Math.abs(rAct - prom) < 0.01) {
+                        partes.push(`Tu simulación actual de <strong>${escapeHtml(rendNombre)}</strong> rindió <strong>${fmtCompSigned(rAct)}%</strong>, prácticamente igual al promedio histórico de <strong>${fmtCompSigned(prom)}%</strong> (${hist.length} sesiones previas).`);
+                    } else if (rAct > prom) {
+                        partes.push(`Superaste tu promedio histórico: <strong>${fmtCompSigned(rAct)}%</strong> actual vs <strong>${fmtCompSigned(prom)}%</strong> de promedio (${hist.length} sesiones previas).`);
+                    } else {
+                        partes.push(`Tu simulación actual (<strong>${fmtCompSigned(rAct)}%</strong>) quedó por debajo del promedio histórico de <strong>${fmtCompSigned(prom)}%</strong> (${hist.length} sesiones previas).`);
+                    }
+                } else if (rAct !== null) {
+                    partes.push(`Esta es la <strong>primera simulación guardada</strong> de <strong>${esc(rendNombre)}</strong> con <strong>${fmtCompSigned(rAct)}%</strong> de rendimiento. Guarda más sessions para comparar.`);
+                }
+            }
+
+            const barreras = hist.concat(a ? [a] : []).filter(s => para(s.rendimiento) !== null);
+            if (barreras.length) {
+                const mejor = barreras.reduce((x, y) => (para(y.rendimiento) > para(x.rendimiento) ? y : x));
+                const mejorV = para(mejor.rendimiento);
+                const peor = barreras.reduce((x, y) => (para(y.rendimiento) < para(x.rendimiento) ? y : x));
+                const peorV = para(peor.rendimiento);
+                const md = mejor.moneda || '—';
+                if (mejorV >= 5) {
+                    partes.push(`La mejor sesión fue <strong>${esc(md)}</strong> con <strong>${fmtCompSigned(mejorV)}%</strong>; la peor fue <strong>${esc(peor.moneda || '—')}</strong> con <strong>${fmtCompSigned(peorV)}%</strong>.`);
+                } else {
+                    partes.push(`Rango de rendimiento entre <strong>${fmtCompSigned(peorV)}%</strong> (peor: ${esc(peor.moneda || '—')}) y <strong>${fmtCompSigned(mejorV)}%</strong> (mejor: ${esc(md)}).`);
+                }
+            }
+
+            const sharps = barreras.map(s => para(s.sharpe)).filter(v => v !== null);
+            if (sharps.length) {
+                const promS = sharps.reduce((x, y) => x + y, 0) / sharps.length;
+                if (promS >= 1) partes.push(`Consistencia saludable: el <strong>Sharpe promedio</strong> es <strong>${promS.toFixed(2)}</strong>, señal de buen retorno ajustado a riesgo.`);
+                else if (promS >= 0) partes.push(`El <strong>Sharpe promedio</strong> es <strong>${promS.toFixed(2)}</strong>: los retornos apenas compensan el riesgo asumido.`);
+                else partes.push(`Atención: el <strong>Sharpe promedio</strong> es negativo (<strong>${promS.toFixed(2)}</strong>), el riesgo supera los retornos.`);
+            }
+
+            const dds = barreras.map(s => para(s.drawdown)).filter(v => v !== null);
+            if (dds.length) {
+                const maxDD = Math.max(...dds.map(Math.abs));
+                const ddS = maxDD * 100;
+                if (ddS < 3) partes.push(`Además, la mayor caída del capital fue solo de <strong>${ddS.toFixed(1)}%</strong>: buena gestión del riesgo.`);
+                else if (ddS < 10) partes.push(`La mayor caída del capital fue de <strong>${ddS.toFixed(1)}%</strong>: riesgo moderado.`);
+                else partes.push(`Ojo: la mayor caída del capital llegó al <strong>${ddS.toFixed(1)}%</strong>: alto riesgo de pérdidas.`);
+            }
+
+            if (!partes.length) {
+                notaEl.innerHTML = 'Completa tus simulaciones para obtener una explicación basada en los datos de la tabla.';
+            } else {
+                notaEl.innerHTML = partes.slice(0, 3).join(' ');
+            }
+        }
+
+        function esc(v) {
+            return String(v).replace(/[&<>"']/g, (c) => {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function registrarSimulacionActual(datos) {
+            if (!datos) return;
+            simActualDatos = {
+                moneda: datos.moneda,
+                monto: datos.monto,
+                capital_inicial: datos.capital_inicial,
+                capital_final: datos.capital_final,
+                rendimiento: datos.rendimiento,
+                generado: datos.generado,
+                sharpe: datos.sharpe,
+                drawdown: datos.drawdown,
+                win_rate: datos.win_rate,
+                recomendacion: datos.recomendacion,
+            };
+            renderizarComparativa();
+            cargarComparativa();
+        }
+
+        function actualizarDiferencia() {
+            const box = document.getElementById('compDiferencia');
+            if (!box) return;
+            if (!simActualDatos) {
+                box.style.display = 'none';
+                return;
+            }
+            const rends = historialSims.filter(s => typeof s.rendimiento === 'number' && isFinite(s.rendimiento));
+            const prom = rends.length ? rends.reduce((a, b) => a + b.rendimiento, 0) / rends.length : null;
+            const r = simActualDatos.rendimiento;
+            let html = '';
+            if (prom !== null) {
+                const diff = r - prom;
+                html = `Tu simulación actual rindió <strong>${fmtCompSigned(r)}%</strong> frente a un promedio histórico de <strong>${fmtCompSigned(prom)}%</strong>`;
+                if (Math.abs(diff) >= 0.01) html += ` (diferencia <strong>${fmtCompSigned(diff)} p.p.</strong>)`;
+                html += '.';
+            } else {
+                html = `Simulación actual: <strong>${fmtCompSigned(r)}%</strong>. Completa más simulaciones para comparar con tu historial.`;
+            }
+            box.innerHTML = `<i class="fas fa-chart-line"></i> ${html}`;
+            box.style.display = 'block';
         }
 
         function mostrarAuth() {
@@ -675,11 +1048,15 @@
             
             document.getElementById('monedaFrom').addEventListener('change', () => {
                 monedaFrom = document.getElementById('monedaFrom').value;
+                graficoOffset = 0;
+                graficoLen = 1;
                 cargarPar();
                 reiniciarSimulacion();
             });
             document.getElementById('monedaTo').addEventListener('change', () => {
                 monedaTo = document.getElementById('monedaTo').value;
+                graficoOffset = 0;
+                graficoLen = 1;
                 cargarPar();
                 reiniciarSimulacion();
             });
@@ -735,11 +1112,27 @@
             const container = document.getElementById('graficoContainer');
             if (!container || !precios || precios.length < 2) return;
             container.style.display = 'block';
+            inicializarInteraccionesGrafico();
 
+            graficoSource = precios;
             const total = precios.length;
-            const visibles = limite !== undefined ? Math.min(Math.max(limite, 2), total) : total;
-            const valores = precios.map(d => typeof d === 'number' ? d : d.precio);
-            const etiquetas = precios.map((d, i) => `D${i + 1}`);
+
+            let from = 0;
+            let to = total;
+            if (limite !== undefined) {
+                graficoOffset = 0;
+                graficoLen = 1;
+                to = Math.min(Math.max(limite, 2), total);
+                from = 0;
+            } else if (graficoLen > 2) {
+                from = clampNum(graficoOffset, 0, Math.max(0, total - graficoLen));
+                to = Math.min(from + graficoLen, total);
+            }
+
+            const vis = precios.slice(from, to);
+            if (vis.length < 2) return;
+            const valores = vis.map(d => typeof d === 'number' ? d : d.precio);
+            const etiquetas = vis.map((d, i) => `D${from + i + 1}`);
 
             const sma = (data, periodo) => {
                 const out = [];
@@ -752,16 +1145,17 @@
                 return out;
             };
 
-            const seriePrecio = valores.map((v, i) => i < visibles ? v : null);
-            const serieSma5 = sma(valores.slice(0, visibles), 5);
-            const serieSma20 = sma(valores.slice(0, visibles), 20);
-            while (serieSma5.length < total) serieSma5.push(null);
-            while (serieSma20.length < total) serieSma20.push(null);
+            const seriePrecio = valores;
+            const serieSma5 = sma(valores, 5);
+            const serieSma20 = sma(valores, 20);
 
             const ctx = document.getElementById('graficoGrande').getContext('2d');
 
             if (graficoGrande) {
                 graficoGrande.data.labels = etiquetas;
+                graficoGrande.data.datasets.forEach((ds, i) => {
+                    if (i === 0) ds.label = `${monedaFrom}/${monedaTo}`;
+                });
                 graficoGrande.data.datasets[0].data = seriePrecio;
                 graficoGrande.data.datasets[1].data = serieSma5;
                 graficoGrande.data.datasets[2].data = serieSma20;
@@ -840,6 +1234,59 @@
                     },
                 },
             });
+        }
+
+        function graficoZoom(factor) {
+            const total = graficoSource.length;
+            if (total < 5) return;
+            const actual = graficoLen > 2 ? graficoLen : total;
+            const len = clampNum(Math.round(actual * factor), 5, total);
+            const mid = graficoOffset + actual / 2;
+            graficoOffset = clampNum(Math.round(mid - len / 2), 0, Math.max(0, total - len));
+            graficoLen = len;
+            redibujarGrafico();
+        }
+
+        function redibujarGrafico() {
+            if (graficoSource.length) dibujarGraficoGrande(graficoSource);
+        }
+
+        function inicializarInteraccionesGrafico() {
+            const container = document.getElementById('graficoContainer');
+            if (!container || container.dataset.zoomInit) return;
+            container.dataset.zoomInit = '1';
+            const canvas = document.getElementById('graficoGrande');
+            if (!canvas) return;
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                graficoZoom(e.deltaY < 0 ? 0.85 : 1.18);
+            }, { passive: false });
+
+            let arrastrando = null;
+            canvas.addEventListener('pointerdown', (e) => {
+                arrastrando = { x: e.clientX, offset: graficoOffset };
+                canvas.setPointerCapture(e.pointerId);
+                canvas.classList.add('panning');
+            });
+            canvas.addEventListener('pointermove', (e) => {
+                if (!arrastrando || graficoLen <= 2) return;
+                const total = graficoSource.length;
+                const vis = Math.min(graficoLen, total);
+                const rect = canvas.getBoundingClientRect();
+                const diasPixel = vis / rect.width;
+                const deltaDias = Math.round((arrastrando.x - e.clientX) * diasPixel);
+                graficoOffset = clampNum(arrastrando.offset + deltaDias, 0, Math.max(0, total - vis));
+                redibujarGrafico();
+            });
+            const finArrastre = () => {
+                if (arrastrando) {
+                    arrastrando = null;
+                    canvas.classList.remove('panning');
+                }
+            };
+            canvas.addEventListener('pointerup', finArrastre);
+            canvas.addEventListener('pointercancel', finArrastre);
         }
 
         async function cargarGraficoGrande() {
@@ -992,8 +1439,6 @@
 
                 diaActual++;
             }, 100);
-            
-            setTimeout(() => actualizarAnalisis(), 1000);
         }
         
         function finalizarSimulacion(precios, capital, acciones, historialCapital, montoInicial) {
@@ -1070,6 +1515,19 @@
             generadoEl.style.display = 'block';
             generadoTexto.textContent = `${generado >= 0 ? '+' : '-'}${infoTo.simbolo}${Math.abs(generado).toFixed(2)}`;
             generadoTexto.style.color = generado >= 0 ? '#00ff88' : '#ff4444';
+
+            registrarSimulacionActual({
+                moneda: `${monedaFrom}/${monedaTo}`,
+                monto: montoInicial,
+                capital_inicial: montoInicial,
+                capital_final: capitalFinal,
+                rendimiento: rendimiento,
+                generado: generado,
+                sharpe: sharpe,
+                drawdown: Math.max(maxDrawdown * 100, 0),
+                win_rate: winRate,
+                recomendacion: 'EN ANÁLISIS',
+            });
 
             setTimeout(() => actualizarAnalisis(precios, rendimiento, sharpe, maxDrawdown * 100, winRate, montoInicial, capitalFinal), 500);
         }
@@ -1370,22 +1828,24 @@
                     opcionesSection.style.display = 'none';
                 }
 
-                guardarSimulacion({
-                    moneda: `${monedaFrom}/${monedaTo}`,
-                    monto: capitalInicial || 0,
-                    capital_inicial: capitalInicial || 0,
-                    capital_final: capitalFinal || 0,
-                    rendimiento: rendimiento || 0,
-                    sharpe: sharpe || 0,
-                    drawdown: drawdown || 0,
-                    win_rate: winRate || 0,
-                    generado: (capitalFinal || 0) - (capitalInicial || 0),
+                const simDatos = {
+                    moneda: simActualDatos && simActualDatos.moneda ? simActualDatos.moneda : `${monedaFrom}/${monedaTo}`,
+                    monto: capitalInicial || (simActualDatos && simActualDatos.monto) || 0,
+                    capital_inicial: capitalInicial || (simActualDatos && simActualDatos.capital_inicial) || 0,
+                    capital_final: capitalFinal || (simActualDatos && simActualDatos.capital_final) || 0,
+                    rendimiento: rendimiento || (simActualDatos && simActualDatos.rendimiento) || 0,
+                    sharpe: sharpe || (simActualDatos && simActualDatos.sharpe) || 0,
+                    drawdown: drawdown || (simActualDatos && simActualDatos.drawdown) || 0,
+                    win_rate: winRate || (simActualDatos && simActualDatos.win_rate) || 0,
+                    generado: (capitalFinal || (simActualDatos && simActualDatos.capital_final) || 0) - (capitalInicial || (simActualDatos && simActualDatos.capital_inicial) || 0),
                     compound: (vaderData && !vaderData.error ? vaderData.compound_score : 0) || 0,
                     sentimiento: ai.sentimiento || 'neutral',
                     recomendacion: ai.recomendacion || 'MANTENER',
                     confianza: ai.confianza || 0,
                     analisis: ai.analisis || '',
-                });
+                };
+                guardarSimulacion(simDatos);
+                registrarSimulacionActual(simDatos);
             } catch (e) {
                 console.log('Error en análisis DeepSeek:', e);
                 if (!vaderData || vaderData.error) {

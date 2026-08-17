@@ -16,7 +16,7 @@ import hashlib
 import secrets
 import json
 
-from database import connect_db, close_db, get_db, is_db_connected
+from database import connect_db, close_db, get_db, is_db_connected, is_db_atlas_connected, insert_dual, delete_dual
 from security import encrypt_text, decrypt_text, encrypt_num, decrypt_num, hash_key
 from services.yfinance_service import obtener_precios_forex, obtener_historico_forex, obtener_precio_par, obtener_historico_par
 from services.coingecko_service import obtener_tendencias
@@ -69,16 +69,15 @@ async def get_precios():
         return {"error": "No se pudieron obtener precios Forex"}, 503
     db = get_db()
     if db is not None:
-        for moneda, data in monedas.items():
-            try:
-                await asyncio.wait_for(db.prices.insert_one({
-                    "moneda": moneda,
-                    "precio": data["precio"],
-                    "cambio": data["cambio"],
-                    "timestamp": datetime.utcnow(),
-                }), timeout=3)
-            except Exception as e:
-                print(f"Error DB insert: {e}")
+        try:
+            await insert_dual("prices", {
+                "moneda": moneda,
+                "precio": data["precio"],
+                "cambio": data["cambio"],
+                "timestamp": datetime.utcnow(),
+            })
+        except Exception as e:
+            print(f"Error DB insert: {e}")
     return {
         "monedas": monedas,
         "timestamp": datetime.utcnow().isoformat(),
@@ -141,7 +140,7 @@ async def get_analisis(moneda: str = Query("USD")):
     db = get_db()
     if db is not None:
         try:
-            await db.analisis.insert_one({
+            await insert_dual("analisis", {
                 "moneda": moneda,
                 "precio": data["precio"],
                 "cambio": data["cambio"],
@@ -236,7 +235,7 @@ async def post_analizar_historico(data: dict = Body(...)):
     db = get_db()
     if db is not None:
         try:
-            await db.analisis_historico.insert_one({
+            await insert_dual("analisis_historico", {
                 "moneda": moneda,
                 "precios_muestra": precios[:5],
                 "total_datos": len(precios),
@@ -264,6 +263,7 @@ async def get_status():
         "api": "online",
         "version": "1.0.0",
         "base_datos": "conectado" if is_db_connected() else "desconectado",
+        "base_datos_atlas": "conectado" if is_db_atlas_connected() else "desconectado",
         "timestamp": datetime.utcnow().isoformat(),
     }
 
@@ -386,7 +386,7 @@ async def crear_sesion(username: str) -> str:
     if db is not None:
         try:
             from datetime import timedelta
-            await db.sessions.insert_one({
+            await insert_dual("sessions", {
                 "token_hash": hash_key(token),
                 "username_hash": hash_key(username),
                 "username_enc": encrypt_text(username),
@@ -434,7 +434,7 @@ async def register(req: RegisterRequest):
 
     hashed = hash_password(req.password.strip())
     email = req.email.strip()
-    await db.users.insert_one({
+    await insert_dual("users", {
         "username_hash": hash_key(req.username.strip()),
         "username_enc": encrypt_text(req.username.strip()),
         "password": hashed,
@@ -475,7 +475,7 @@ async def logout(token: str = Query("")):
     db = get_db()
     if db is not None and token:
         try:
-            await db.sessions.delete_one({"token_hash": hash_key(token)})
+            await delete_dual("sessions", {"token_hash": hash_key(token)})
         except Exception:
             pass
     return {"success": True}
@@ -513,8 +513,8 @@ async def guardar_simulacion(req: SimulacionRequest):
             v = doc.get(campo)
             if v is not None:
                 doc[campo] = encrypt_num(v)
-        res = await db.simulaciones.insert_one(doc)
-        return {"success": True, "id": str(res.inserted_id)}
+        res = await insert_dual("simulaciones", doc)
+        return {"success": True, "id": str(res)}
     except Exception as e:
         print(f"Error guardando simulacion: {e}")
         return JSONResponse(content={"error": "No se pudo guardar la simulacion"}, status_code=500)
@@ -554,8 +554,8 @@ async def eliminar_simulacion(sim_id: str, token: str = Query("")):
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
     try:
-        res = await db.simulaciones.delete_one({"_id": ObjectId(sim_id), "username_hash": hash_key(sesion["username"])})
-        if res.deleted_count == 0:
+        res = await delete_dual("simulaciones", {"_id": ObjectId(sim_id), "username_hash": hash_key(sesion["username"])})
+        if res == 0:
             return JSONResponse(content={"error": "Simulacion no encontrada"}, status_code=404)
         return {"success": True}
     except Exception as e:
