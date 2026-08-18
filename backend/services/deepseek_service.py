@@ -1,6 +1,185 @@
 import json as js
+import time
+import hashlib
+import asyncio
 import httpx
 from config import DEEPSEEK_API_KEY, DEEPSEEK_API_URL
+
+# ============ PROTECCIONES ============
+
+_cache = {}
+CACHE_TTL = 600  # 10 minutos
+
+_rate_times = []
+RATE_MAX = 6          # max llamadas
+RATE_WINDOW = 60      # por minuto
+_rate_lock = asyncio.Lock()
+
+_fallos_consecutivos = 0
+CIRCUITO_UMBRAL = 3
+CIRCUITO_ESPERA = 60
+_circuito_abierto_hasta = 0.0
+
+TIMEOUT_LLAMADA = 20  # segundos
+RETRIES = 3
+
+
+def _clave_cache(nombre, *args):
+    serial = js.dumps(args, default=str, sort_keys=True)
+    return hashlib.md5(f"{nombre}|{serial}".encode()).hexdigest()
+
+
+def _leer_cache(clave):
+    item = _cache.get(clave)
+    if not item:
+        return None
+    if time.time() - item["ts"] > CACHE_TTL:
+        _cache.pop(clave, None)
+        return None
+    return item["data"]
+
+
+def _escribir_cache(clave, data):
+    _cache[clave] = {"ts": time.time(), "data": data}
+    if len(_cache) > 200:
+        ahora = time.time()
+        viejos = [k for k, v in _cache.items() if ahora - v["ts"] > CACHE_TTL]
+        for k in viejos:
+            _cache.pop(k, None)
+
+
+def _circuito_abierto():
+    return time.time() < _circuito_abierto_hasta
+
+
+def _registrar_fallo():
+    global _fallos_consecutivos, _circuito_abierto_hasta
+    _fallos_consecutivos += 1
+    if _fallos_consecutivos >= CIRCUITO_UMBRAL:
+        _circuito_abierto_hasta = time.time() + CIRCUITO_ESPERA
+        print(f"DeepSeek: circuito abierto por {CIRCUITO_ESPERA}s (fallos consecutivos: {_fallos_consecutivos})")
+
+
+def _registrar_exito():
+    global _fallos_consecutivos, _circuito_abierto_hasta
+    _fallos_consecutivos = 0
+    _circuito_abierto_hasta = 0.0
+
+
+async def _permitido_rate_limit():
+    global _rate_times
+    async with _rate_lock:
+        ahora = time.time()
+        _rate_times = [t for t in _rate_times if ahora - t < RATE_WINDOW]
+        if len(_rate_times) >= RATE_MAX:
+            return False
+        _rate_times.append(ahora)
+        return True
+
+
+def _normalizar(resultado):
+    for key in resultado:
+        if isinstance(resultado[key], str):
+            resultado[key] = (
+                resultado[key]
+                .replace("alcista", "alta").replace("bajista", "baja")
+                .replace("positivo", "alta").replace("negativo", "baja")
+                .replace("Alcista", "Alta").replace("Bajista", "Baja")
+                .replace("Positivo", "Alta").replace("Negativo", "Baja")
+            )
+    return resultado
+
+
+async def _llamar_deepseek(prompt: str, max_tokens: int):
+    """Llama a la API de DeepSeek con cache, rate limit, reintentos y circuito."""
+    if not DEEPSEEK_API_KEY:
+        return None
+
+    if _circuito_abierto():
+        print("DeepSeek: circuito abierto, saltando llamada")
+        return None
+
+    permitido = await _permitido_rate_limit()
+    if not permitido:
+        print("DeepSeek: rate limit alcanzado")
+        return None
+
+    ultimo_error = None
+    for intento in range(RETRIES):
+        try:
+            async with httpx.AsyncClient(timeout=TIMEOUT_LLAMADA) as client:
+                resp = await client.post(
+                    DEEPSEEK_API_URL,
+                    headers={
+                        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "deepseek-chat",
+                        "messages": [
+                            {"role": "system", "content": "Eres un analista financiero. Responde solo JSON valido, sin markdown."},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": max_tokens,
+                    },
+                )
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.ConnectError) as e:
+            ultimo_error = e
+            if intento < RETRIES - 1:
+                print(f"DeepSeek: error de red (intento {intento + 1}/{RETRIES}): {e}")
+                await asyncio.sleep(2 ** intento)
+                continue
+            break
+
+        if resp.status_code == 200:
+            try:
+                content = resp.json()["choices"][0]["message"]["content"]
+                inicio = content.find("{")
+                fin = content.rfind("}")
+                if inicio == -1 or fin == -1:
+                    ultimo_error = "Respuesta sin JSON"
+                    break
+                resultado = js.loads(content[inicio:fin + 1])
+                _registrar_exito()
+                return _normalizar(resultado)
+            except (js.JSONDecodeError, KeyError, IndexError) as e:
+                ultimo_error = e
+                break
+
+        if resp.status_code == 429:
+            ultimo_error = f"Rate limit HTTP {resp.status_code}"
+            if intento < RETRIES - 1:
+                print(f"DeepSeek: rate limit, reintentando en {2 ** intento}s")
+                await asyncio.sleep(2 ** intento)
+                continue
+            break
+
+        if resp.status_code in (500, 502, 503):
+            ultimo_error = f"Error de servidor HTTP {resp.status_code}"
+            if intento < RETRIES - 1:
+                await asyncio.sleep(2 ** intento)
+                continue
+            break
+
+        ultimo_error = f"HTTP {resp.status_code}"
+        break
+
+    _registrar_fallo()
+    print(f"DeepSeek: llamada fallida tras {RETRIES} intentos: {ultimo_error}")
+    return None
+
+
+async def _analizar_con_cache(nombre: str, clave_args: tuple, prompt: str, max_tokens: int):
+    clave = _clave_cache(nombre, *clave_args)
+    desde_cache = _leer_cache(clave)
+    if desde_cache is not None:
+        print(f"DeepSeek: respuesta desde cache ({nombre})")
+        return desde_cache
+    resultado = await _llamar_deepseek(prompt, max_tokens)
+    if resultado is not None:
+        _escribir_cache(clave, resultado)
+    return resultado
 
 
 async def analizar_sentimiento(moneda: str, precio: float, cambio: float):
@@ -21,35 +200,8 @@ Responde UNICAMENTE con un JSON valido sin markdown:
   "confianza": 0 a 1
 }}
 """
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(
-            DEEPSEEK_API_URL,
-            headers={
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "deepseek-chat",
-                "messages": [
-                    {"role": "system", "content": "Eres un analista financiero. Responde solo JSON valido, sin markdown."},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.3,
-                "max_tokens": 300,
-            },
-        )
-        if resp.status_code != 200:
-            return None
-        content = resp.json()["choices"][0]["message"]["content"]
-        inicio = content.find("{")
-        fin = content.rfind("}")
-        if inicio == -1 or fin == -1:
-            return None
-        resultado = js.loads(content[inicio:fin+1])
-        for key in ["sentimiento", "analisis", "recomendacion"]:
-            if key in resultado and isinstance(resultado[key], str):
-                resultado[key] = resultado[key].replace("alcista", "alta").replace("bajista", "baja").replace("positivo", "alta").replace("negativo", "baja").replace("Alcista", "Alta").replace("Bajista", "Baja").replace("Positivo", "Alta").replace("Negativo", "Baja")
-        return resultado
+    return await _analizar_con_cache("sentimiento", (moneda, precio, cambio), prompt, 300)
+
 
 async def analizar_semaforo(moneda: str, noticias: list):
     if not DEEPSEEK_API_KEY or not noticias:
@@ -75,35 +227,7 @@ Responde UNICAMENTE con un JSON valido sin markdown:
   "noticias_clave": ["titulo noticia mas relevante 1", "titulo noticia mas relevante 2"]
 }}
 """
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(
-            DEEPSEEK_API_URL,
-            headers={
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "deepseek-chat",
-                "messages": [
-                    {"role": "system", "content": "Eres un analista financiero. Responde solo JSON valido, sin markdown."},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.3,
-                "max_tokens": 400,
-            },
-        )
-        if resp.status_code != 200:
-            return None
-        content = resp.json()["choices"][0]["message"]["content"]
-        inicio = content.find("{")
-        fin = content.rfind("}")
-        if inicio == -1 or fin == -1:
-            return None
-        resultado = js.loads(content[inicio:fin+1])
-        for key in ["sentimiento", "analisis", "recomendacion"]:
-            if key in resultado and isinstance(resultado[key], str):
-                resultado[key] = resultado[key].replace("alcista", "alta").replace("bajista", "baja").replace("positivo", "alta").replace("negativo", "baja").replace("Alcista", "Alta").replace("Bajista", "Baja").replace("Positivo", "Alta").replace("Negativo", "Baja")
-        return resultado
+    return await _analizar_con_cache("semaforo", (moneda, noticias_texto[:500]), prompt, 400)
 
 
 async def analizar_historico(moneda: str, precios: list[dict], capital_inicial: float, capital_final: float, rendimiento: float, sharpe: float, drawdown: float, win_rate: float, vader: dict | None = None, tipos_cambio: dict | None = None, acciones: list | None = None):
@@ -254,35 +378,9 @@ Responde UNICAMENTE con un JSON valido sin markdown:
   ]
 }}
 """
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(
-            DEEPSEEK_API_URL,
-            headers={
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "deepseek-chat",
-                "messages": [
-                    {"role": "system", "content": "Eres un analista financiero. Responde solo JSON valido, sin markdown."},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.3,
-                "max_tokens": 2500,
-            },
-        )
-        if resp.status_code != 200:
-            return None
-        content = resp.json()["choices"][0]["message"]["content"]
-        inicio = content.find("{")
-        fin = content.rfind("}")
-        if inicio == -1 or fin == -1:
-            return None
-        try:
-            resultado = js.loads(content[inicio:fin+1])
-        except js.JSONDecodeError:
-            return None
-        for key in resultado:
-            if isinstance(resultado[key], str):
-                resultado[key] = resultado[key].replace("alcista", "alta").replace("bajista", "baja").replace("positivo", "alta").replace("negativo", "baja").replace("Alcista", "Alta").replace("Bajista", "Baja").replace("Positivo", "Alta").replace("Negativo", "Baja")
-        return resultado
+    return await _analizar_con_cache(
+        "historico",
+        (moneda, round(precio_inicial, 4), round(precio_final, 4), round(rendimiento, 2), round(sharpe, 2), round(drawdown, 1), round(win_rate, 1)),
+        prompt,
+        2500,
+    )

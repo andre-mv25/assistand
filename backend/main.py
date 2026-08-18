@@ -28,6 +28,33 @@ from services.banxico_service import obtener_tipo_cambio, obtener_tipo_cambio_mu
 from services.acciones_service import obtener_acciones
 
 
+def _fallback_vader(moneda: str, rendimiento: float, sharpe: float, vader: dict | None):
+    """Analisis degradado basado en VADER cuando DeepSeek no esta disponible."""
+    if not vader:
+        return None
+    compound = vader.get("compound_score", 0.0) or 0.0
+    clasif = vader.get("clasificacion", "neutral") or "neutral"
+
+    if clasif == "alta":
+        sentimiento, recomendacion = "alta", "COMPRAR"
+    elif clasif == "baja":
+        sentimiento, recomendacion = "baja", "VENDER"
+    else:
+        sentimiento, recomendacion = "neutral", "MANTENER"
+
+    return {
+        "sentimiento": sentimiento,
+        "valor": round(max(-1.0, min(1.0, compound)), 2),
+        "analisis": f"DeepSeek no disponible; analisis en modo degradado con VADER ({vader.get('noticias_analizadas', 0)} noticias, clasificacion {clasif.upper()}). Rendimiento de la simulacion: {rendimiento:.2f}%, Sharpe: {sharpe:.2f}.",
+        "recomendacion": recomendacion,
+        "confianza": round(min(0.5, abs(compound) + 0.15), 2),
+        "patron_encontrado": "Analisis VADER (modo degradado, sin DeepSeek)",
+        "opciones": [],
+        "opciones_acciones": [],
+        "fuente_fallback": f"vader::{moneda}",
+    }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_db()
@@ -230,7 +257,10 @@ async def post_analizar_historico(data: dict = Body(...)):
 
     analisis = await analizar_historico(moneda, precios, capital_inicial, capital_final, rendimiento, sharpe, drawdown, win_rate, vader, tipos_cambio, acciones)
     if analisis is None:
-        return {"error": "No se pudo obtener analisis de DeepSeek"}, 503
+        print(f"DeepSeek no disponible para {moneda}, usando fallback VADER")
+        analisis = _fallback_vader(moneda, rendimiento, sharpe, vader)
+    if analisis is None:
+        return {"error": "No se pudo obtener analisis (DeepSeek ni VADER disponibles)"}, 503
 
     db = get_db()
     if db is not None:
