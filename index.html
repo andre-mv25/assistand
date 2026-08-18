@@ -451,7 +451,10 @@
         // TRADING ASSISTANT — DATOS REALES vía yfinance
         // ============================================
         
-        const API_BASE = 'http://localhost:8000';
+        const API_BASE =
+            location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+                ? 'http://localhost:8000'
+                : '';
 
         function formatearNumero(n, decimals = 2) {
             return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
