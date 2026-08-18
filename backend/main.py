@@ -419,7 +419,7 @@ async def crear_sesion(username: str) -> str:
             await insert_dual("sessions", {
                 "token_hash": hash_key(token),
                 "username_hash": hash_key(username),
-                "username_enc": encrypt_text(username),
+                "username": username,
                 "created_at": datetime.utcnow(),
                 "expires_at": datetime.utcnow() + timedelta(days=30),
             })
@@ -441,7 +441,7 @@ async def validar_token(token: str):
             "expires_at": {"$gt": dt.utcnow()},
         })
         if sesion:
-            sesion["username"] = decrypt_text(sesion.get("username_enc"))
+            sesion["username"] = sesion.get("username") or decrypt_text(sesion.get("username_enc"))
         return sesion
     except Exception:
         return None
@@ -466,7 +466,7 @@ async def register(req: RegisterRequest):
     email = req.email.strip()
     await insert_dual("users", {
         "username_hash": hash_key(req.username.strip()),
-        "username_enc": encrypt_text(req.username.strip()),
+        "username": req.username.strip(),
         "password": hashed,
         "email_enc": encrypt_text(email) if email else None,
         "created_at": datetime.utcnow(),
@@ -533,7 +533,7 @@ async def guardar_simulacion(req: SimulacionRequest):
     try:
         doc = req.model_dump(exclude={"token"})
         doc["username_hash"] = hash_key(sesion["username"])
-        doc["username_enc"] = encrypt_text(sesion["username"])
+        doc["username"] = sesion["username"]
         doc["fecha"] = datetime.utcnow()
         for campo in SIMULACION_CAMPOS_TEXTO:
             v = doc.get(campo)
@@ -563,7 +563,7 @@ async def listar_simulaciones(token: str = Query("")):
         simulaciones = []
         async for doc in cursor:
             doc["_id"] = str(doc["_id"])
-            doc["username"] = decrypt_text(doc.get("username_enc"))
+            doc["username"] = doc.get("username") or decrypt_text(doc.get("username_enc"))
             for campo in SIMULACION_CAMPOS_TEXTO:
                 doc[campo] = decrypt_text(doc.get(campo))
             for campo in SIMULACION_CAMPOS_NUMERO:
