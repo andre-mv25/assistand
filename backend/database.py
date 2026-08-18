@@ -1,34 +1,41 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGO_URI, MONGO_DB
+from config import MONGO_URI_ATLAS, MONGO_URI_LOCAL, MONGO_DB
 
 client: AsyncIOMotorClient = None
 db = None
 db_conectado = False
+db_es_atlas = False
 
 
 async def connect_db():
-    global client, db, db_conectado
-    if not MONGO_URI:
-        print("MONGO_URI no configurada, DB desactivada")
-        return
-    try:
-        client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-        await client.admin.command("ping")
-        db = client[MONGO_DB]
-        db_conectado = True
-        print(f"MongoDB conectado: {MONGO_DB}")
-    except Exception as e:
-        print(f"Error conectando a MongoDB: {e}")
-        db_conectado = False
+    global client, db, db_conectado, db_es_atlas
+    uris = [MONGO_URI_ATLAS, MONGO_URI_LOCAL]
+    uris = list(dict.fromkeys(uri for uri in uris if uri))
+    for uri in uris:
+        try:
+            c = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=5000)
+            await c.admin.command("ping")
+            client = c
+            db = client[MONGO_DB]
+            db_conectado = True
+            db_es_atlas = uri.startswith("mongodb+srv://")
+            origen = "Atlas" if db_es_atlas else "local"
+            print(f"MongoDB conectado ({origen}): {MONGO_DB}")
+            return
+        except Exception as e:
+            print(f"Error conectando a MongoDB ({uri[:30]}...): {e}")
+    db_conectado = False
+    db_es_atlas = False
 
 
 async def close_db():
-    global client, db, db_conectado
+    global client, db, db_conectado, db_es_atlas
     if client:
         client.close()
         client = None
         db = None
         db_conectado = False
+        db_es_atlas = False
         print("MongoDB desconectado")
 
 
@@ -41,7 +48,7 @@ def is_db_connected():
 
 
 def is_db_atlas_connected():
-    return False
+    return db_es_atlas
 
 
 async def insert_dual(collection_name: str, doc: dict):
