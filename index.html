@@ -230,6 +230,39 @@
                         </div>
                     </div>
                     <canvas id="graficoGrande"></canvas>
+
+                    <div class="comp-explicador">
+                        <div class="comp-explicador-titulo">
+                            <i class="fas fa-info-circle"></i> ¿Qué son SMA5 y SMA20?
+                        </div>
+                        <p>
+                            <strong>SMA</strong> significa <em>media móvil simple</em> (simple moving average): es el promedio
+                            del precio de un par de divisas durante los últimos N días.
+                        </p>
+                        <ul class="sma-lista">
+                            <li><strong>SMA5</strong> = promedio del precio de los <strong>últimos 5 días</strong>. Reacciona rápido porque sigue lo que pasa hoy.</li>
+                            <li><strong>SMA20</strong> = promedio del precio de los <strong>últimos 20 días</strong>. Es más lento, pero muestra la tendencia más estable del último mes.</li>
+                        </ul>
+                        <p>
+                            <strong>Cómo leerlo:</strong> si el SMA5 está por <strong>encima</strong> del SMA20, el precio lleva días subiendo con fuerza
+                            (tendencia positiva, a favor de comprar). Si está por <strong>debajo</strong>, la tendencia es a la baja y conviene esperar.
+                            Mientras más juntos estén, más indeciso está el mercado.
+                        </p>
+                        <p><small>Los valores de SMA5 y SMA20 aparecen arriba, junto a tu capital y rendimiento.</small></p>
+                    </div>
+
+                    <div class="comp-explicador">
+                        <div class="comp-explicador-titulo">
+                            <i class="fas fa-info-circle"></i> Conceptos de la gráfica
+                        </div>
+                        <ul class="sma-lista">
+                            <li><strong>Tipo de cambio</strong> — cuánto cuesta una moneda expresada en otra (ej. 17.50 pesos por cada dólar).</li>
+                            <li><strong>Posición</strong> — qué moneda tienes comprada en este momento de la simulación.</li>
+                            <li><strong>Capital</strong> — el dinero actual de tu inversión (lo que empezaste más lo ganado o perdido).</li>
+                            <li><strong>Rendimiento</strong> — cuánto cambió tu dinero en porcentaje: +10% significa que por cada $100 ahora tienes $110.</li>
+                            <li><strong>Generado</strong> — el dinero en pesos que ganaste o perdiste (el rendimiento, pero en dinero real).</li>
+                        </ul>
+                    </div>
                 </div>
             </section>
 
@@ -425,6 +458,18 @@
                             <div class="metric-bar-fill" id="winRateBar" style="width: 0%;"></div>
                         </div>
                     </div>
+                </div>
+
+                <div class="comp-explicador">
+                    <div class="comp-explicador-titulo">
+                        <i class="fas fa-info-circle"></i> ¿Qué significan estas métricas?
+                    </div>
+                    <ul class="sma-lista">
+                        <li><strong>Rendimiento</strong> — cuánto ganaste (o perdiste) en porcentaje. +10% = por cada $100 invertidos, terminaste con $110.</li>
+                        <li><strong>Sharpe Ratio</strong> — compara lo que ganas contra el riesgo que corres. A mayor número, mejor: <strong>1 o más</strong> es bueno, <strong>de 0 a 1</strong> es regular, <strong>negativo</strong> es malo.</li>
+                        <li><strong>Drawdown</strong> — lo peor que llegó a caer tu dinero desde su punto más alto: el tamaño del "susto" máximo del camino.</li>
+                        <li><strong>Win Rate</strong> — de cada 100 operaciones de la simulación, cuántas terminaron en ganancia.</li>
+                    </ul>
                 </div>
             </section>
 
@@ -1746,8 +1791,20 @@
 
                 actualizarSemaforo(valorSentimiento, `DeepSeek: ${sentimientoDisplay} -- ${ai.analisis?.substring(0, 100)}...`);
 
+                let resumenSimple = '';
+                if (capitalInicial > 0) {
+                    const recSimp = (ai.recomendacion || 'MANTENER');
+                    const sentRec = recSimp === 'COMPRAR' ? 'ahora conviene <strong>comprar</strong>' : recSimp === 'VENDER' ? 'ahora conviene <strong>vender o esperar</strong>' : 'por ahora lo mejor es <strong>mantenerte como estás</strong>';
+                    const confSimp = Math.min(Math.max((ai.confianza || 0) * 100, 0), 100);
+                    resumenSimple = '<p class="ai-simple"><strong>En palabras simples:</strong><br>'
+                        + `Empezaste con <strong>$${fmtComp(capitalInicial)}</strong> y terminaste con <strong>$${fmtComp(capitalFinal)}</strong>, un rendimiento de <strong>${fmtCompSigned(rendimiento || 0)}%</strong>. `
+                        + `De cada 100 operaciones, <strong>${fmtComp(winRate || 0)}%</strong> salieron ganando, y lo peor que llegó a caer tu dinero fue <strong>-${fmtComp(Math.abs(drawdown || 0))}%</strong>. `
+                        + `Con esa información, el sistema dice que ${sentRec}, con una confianza del ${confSimp.toFixed(0)}%.</p>`;
+                }
+
                 document.getElementById('deepseekResult').innerHTML = `
                     <p><strong>DeepSeek -- Veredicto Final</strong></p>
+                    ${resumenSimple}
                     <p>${ai.analisis}</p>
                     <p><small>Basado en Yahoo Finance + VADER (noticias) + DeepSeek</small></p>
                 `;

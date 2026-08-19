@@ -588,6 +588,26 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
     border-left: 4px solid #00ffaa;
 }
 
+.ai-simple {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.3);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.sma-lista {
+    margin: 0.5rem 0 0.5rem 1.2rem;
+    padding: 0;
+    list-style: disc;
+}
+.sma-lista li {
+    margin: 0.35rem 0;
+    line-height: 1.55;
+}
+.sma-lista strong { color: #00ff88; }
+
 /* Métricas */
 .metrics-grid {
     display: grid;

@@ -346,11 +346,13 @@ ANTES DE RESPONDER, RAZONA PASO A PASO:
 
 VOCABULARIO OBLIGATORIO: Usa exclusivamente "alta" para tendencia positiva, "baja" para tendencia negativa, "neutral" para sin tendencia. NO uses las palabras alcista, bajista, positivo, negativo, bullish, bearish.
 
+ESTILO DE ESCRITURA: Escribe como un asesor que le habla a una persona sin experiencia en bolsa: frases cortas, sin tecnicismos innecesarios, y si mencionas un numero (rendimiento, drawdown, RSI, SMA, Sharpe) di en una frase sencilla que significa para el usuario.
+
 Responde UNICAMENTE con un JSON valido sin markdown:
 {{
   "sentimiento": "alta" | "baja" | "neutral",
   "valor": -1 a 1,
-  "analisis": "analisis integrando datos historicos, indicadores tecnicos y noticias (max 3 oraciones)",
+  "analisis": "analisis breve en lenguaje CLARO Y SENCILLO, de maximo 3 oraciones, como si se lo explicaras a un principiante: di que paso con el dinero, que indican los numeros clave y que recomiendas. Evita jerga; si usas un termino tecnico, explica su significado en la misma frase",
   "recomendacion": "COMPRAR" | "VENDER" | "MANTENER",
   "confianza": 0 a 1,
   "patron_encontrado": "patron observado en los datos",
