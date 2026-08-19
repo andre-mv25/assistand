@@ -230,7 +230,7 @@ Responde UNICAMENTE con un JSON valido sin markdown:
     return await _analizar_con_cache("semaforo", (moneda, noticias_texto[:500]), prompt, 400)
 
 
-async def analizar_historico(moneda: str, precios: list[dict], capital_inicial: float, capital_final: float, rendimiento: float, sharpe: float, drawdown: float, win_rate: float, vader: dict | None = None, tipos_cambio: dict | None = None, acciones: list | None = None):
+async def analizar_historico(moneda: str, precios: list[dict], capital_inicial: float, capital_final: float, rendimiento: float, sharpe: float, drawdown: float, win_rate: float, vader: dict | None = None, tipos_cambio: dict | None = None, acciones: list | None = None, pronostico: dict | None = None, senal_stat: dict | None = None):
     if not DEEPSEEK_API_KEY or not precios:
         return None
 
@@ -317,6 +317,19 @@ SEMAFORO DE INVERSION (VADER sobre {vader.get('noticias_analizadas', 0)} noticia
 ACCIONES CANDIDATAS (universo amplio de empresas con datos reales de mercado de los ultimos 90 dias; formato: ticker|empresa|precio|cambio dia|momentum 60d|volatilidad anual|RSI|score retorno/riesgo):
 {lineas}
 """
+    # --- PRONOSTICO ESTADISTICO ARIMA/ARMA ---
+    pronostico_context = ""
+    if pronostico and senal_stat:
+        pron_lineas = "\n".join(
+            f"- Dia {i+1}: {pronostico['pronostico'][i]:.4f} (rango {pronostico['inferior'][i]:.4f} a {pronostico['superior'][i]:.4f})"
+            for i in range(min(5, len(pronostico.get("pronostico", []))))
+        )
+        pronostico_context = f"""
+PRONOSTICO ESTADISTICO ({pronostico.get('modelo', 'ARIMA')} sobre el precio, bandas al 90%):
+{pron_lineas}
+Cambio proyectado a 5 dias: {pronostico.get('cambio_pct', 0):+.2f}%
+Senal estadistica ({senal_stat.get('modelo', 'ARMA')} sobre rendimientos diarios): {senal_stat.get('etiqueta', 'NEUTRAL')} (prediccion {senal_stat.get('prediccion_pct', 0):+.3f}% diaria, confianza {senal_stat.get('confianza', 0)})
+"""
     # --- CADENA DE PENSAMIENTO ---
     prompt = f"""
 Eres un analista financiero experto. Analiza la siguiente simulacion historica de {moneda}.
@@ -332,12 +345,14 @@ Sharpe Ratio: {sharpe:.2f}
 Max Drawdown: {drawdown:.1f}%
 Win Rate: {win_rate:.1f}%
 {indicadores}
+{pronostico_context}
 {tc_context}
 {semaforo_context}
 {acciones_context}
 ANTES DE RESPONDER, RAZONA PASO A PASO:
 1. Analiza la tendencia del precio: {tendencia_pct:+.2f}% en el periodo. ¿Es positiva, negativa o neutral?
 2. Revisa los indicadores tecnicos: SMA5/SMA20 ({cruce_sma}), RSI ({rsi_str}), volatilidad ({vol*100:.2f}%). ¿Se refuerzan entre si o hay divergencia?
+2.5. Revisa el pronostico estadistico ARIMA: ¿hacia donde proyecta el precio a 5 dias y el rango es amplio o estrecho? ¿La senal estadistica ARMA confirma o contradice los indicadores tecnicos?
 3. Compara con las noticias: ¿el sentimiento de las noticias (VADER: {vader.get('compound_score', 'N/A') if vader else 'N/A'}) confirma o contradice los datos tecnicos?
 4. Integra los tipos de cambio actuales: ¿que moneda se ve mas fuerte o mas barata frente a MXN?
 5. Concluye: con toda la informacion integrada, ¿que recomiendas?

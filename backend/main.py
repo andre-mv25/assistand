@@ -18,6 +18,7 @@ import json
 
 from database import connect_db, close_db, get_db, is_db_connected, is_db_atlas_connected, insert_dual, delete_dual
 from security import encrypt_text, decrypt_text, encrypt_num, decrypt_num, hash_key
+from services.arima_service import pronostico_arima, senal_arma_desde_precios
 from services.yfinance_service import obtener_precios_forex, obtener_historico_forex, obtener_precio_par, obtener_historico_par
 from services.coingecko_service import obtener_tendencias
 from services.deepseek_service import analizar_sentimiento, analizar_semaforo, analizar_historico
@@ -148,6 +149,25 @@ async def get_historico_par(from_curr: str, to_curr: str, dias: int = Query(60))
     }
 
 
+@app.get("/api/pronostico/{from_curr}/{to_curr}")
+async def get_pronostico(from_curr: str, to_curr: str, dias: int = Query(80)):
+    """Pronostico ARIMA a 5 dias + senal estadistica ARMA sobre rendimientos."""
+    try:
+        historico = await obtener_historico_par(from_curr.upper(), to_curr.upper(), dias)
+        if historico is None or len(historico) < 30:
+            return {"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, 503
+        valores = [p["precio"] for p in historico]
+        pron = pronostico_arima(valores)
+        if pron is None:
+            return {"error": "No hay suficientes datos para el pronostico"}, 503
+        pron["senal_estadistica"] = senal_arma_desde_precios(valores)
+        pron["timestamp"] = datetime.utcnow().isoformat()
+        return {"success": True, "from": from_curr.upper(), "to": to_curr.upper(), **pron}
+    except Exception as e:
+        print(f"Error pronostico {from_curr}/{to_curr}: {e}")
+        return {"error": "No se pudo calcular el pronostico"}, 503
+
+
 @app.get("/api/analisis")
 async def get_analisis(moneda: str = Query("USD")):
     moneda = moneda.upper()
@@ -255,7 +275,16 @@ async def post_analizar_historico(data: dict = Body(...)):
     except Exception as e:
         print(f"Error obteniendo acciones: {e}")
 
-    analisis = await analizar_historico(moneda, precios, capital_inicial, capital_final, rendimiento, sharpe, drawdown, win_rate, vader, tipos_cambio, acciones)
+    pronostico_ctx = None
+    senal_stat_ctx = None
+    try:
+        valores_p = [p["precio"] for p in precios]
+        pronostico_ctx = pronostico_arima(valores_p)
+        senal_stat_ctx = senal_arma_desde_precios(valores_p)
+    except Exception as e:
+        print(f"Error ARIMA/ARMA: {e}")
+
+    analisis = await analizar_historico(moneda, precios, capital_inicial, capital_final, rendimiento, sharpe, drawdown, win_rate, vader, tipos_cambio, acciones, pronostico_ctx, senal_stat_ctx)
     if analisis is None:
         print(f"DeepSeek no disponible para {moneda}, usando fallback VADER")
         analisis = _fallback_vader(moneda, rendimiento, sharpe, vader)
@@ -283,6 +312,8 @@ async def post_analizar_historico(data: dict = Body(...)):
     return {
         "moneda": moneda,
         "analisis": analisis,
+        "pronostico": pronostico_ctx,
+        "senal_estadistica": senal_stat_ctx,
         "timestamp": datetime.utcnow().isoformat(),
     }
 

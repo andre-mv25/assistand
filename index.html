@@ -278,6 +278,7 @@
                     </div>
                     <div class="senal-texto" id="senalTexto">Esperando analisis...</div>
                     <div class="senal-detalle" id="senalDetalle" style="display: none;"></div>
+                    <div class="senal-detalle" id="senalEstadistica" style="display: none;"></div>
                 </div>
             </section>
 
@@ -484,6 +485,7 @@
         let historialSenales = [];
         let maxCapitalSim = 0;
         let graficoGrande = null;
+        let ultimoPronostico = null;
         let graficoSource = [];
         let graficoOffset = 0;
         let graficoLen = 1; // 1 = mostrar todo el historico; >2 = ventana con zoom
@@ -1160,6 +1162,7 @@
 
             if (graficoGrande) {
                 graficoGrande.data.labels = etiquetas;
+                graficoGrande.data.datasets = graficoGrande.data.datasets.slice(0, 3);
                 graficoGrande.data.datasets.forEach((ds, i) => {
                     if (i === 0) ds.label = `${monedaFrom}/${monedaTo}`;
                 });
@@ -1167,6 +1170,10 @@
                 graficoGrande.data.datasets[1].data = serieSma5;
                 graficoGrande.data.datasets[2].data = serieSma20;
                 graficoGrande.update('none');
+                if (to === total && ultimoPronostico) {
+                    aplicarPronostico(ultimoPronostico);
+                    mostrarSenalEstadistica(ultimoPronostico.senal_estadistica);
+                }
                 return;
             }
 
@@ -1296,11 +1303,71 @@
             canvas.addEventListener('pointercancel', finArrastre);
         }
 
+        function aplicarPronostico(pron) {
+            if (!graficoGrande || !pron || !pron.pronostico || pron.pronostico.length === 0) return;
+            const n = graficoGrande.data.labels.length;
+            const nulos = Array(n).fill(null);
+            const pad = (arr) => nulos.concat(arr);
+            for (let i = 0; i < pron.pronostico.length; i++) {
+                graficoGrande.data.labels.push(`F${i + 1}`);
+            }
+            graficoGrande.data.datasets = graficoGrande.data.datasets.slice(0, 3);
+            graficoGrande.data.datasets.push(
+                {
+                    label: `Pronóstico ARIMA (${pron.modelo})`,
+                    data: pad(pron.pronostico),
+                    borderColor: '#00ccff',
+                    borderDash: [6, 4],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.2
+                },
+                {
+                    label: 'Límite superior',
+                    data: pad(pron.superior),
+                    borderColor: 'rgba(0,204,255,0.25)',
+                    borderDash: [2, 3],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    tension: 0.2
+                },
+                {
+                    label: 'Límite inferior',
+                    data: pad(pron.inferior),
+                    borderColor: 'rgba(0,204,255,0.25)',
+                    borderDash: [2, 3],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    tension: 0.2,
+                    fill: '-1',
+                    backgroundColor: 'rgba(0,204,255,0.06)'
+                }
+            );
+            graficoGrande.update('none');
+        }
+
+        function mostrarSenalEstadistica(s) {
+            const el = document.getElementById('senalEstadistica');
+            if (!el) return;
+            if (!s || !s.etiqueta) { el.style.display = 'none'; return; }
+            const colores = { 'COMPRA': '#00ff88', 'VENTA': '#ff4444', 'NEUTRAL': '#ffaa00' };
+            const icono = s.etiqueta === 'COMPRA' ? '▲' : s.etiqueta === 'VENTA' ? '▼' : '•';
+            el.innerHTML = `<strong>Señal estadística (${s.modelo}):</strong> <span style="color:${colores[s.etiqueta] || '#ffaa00'}">${icono} ${s.etiqueta}</span> — predicción <strong>${fmtCompSigned(s.prediccion_pct || 0)}%</strong> diaria · confianza <strong>${Math.round((s.confianza || 0) * 100)}%</strong>`;
+            el.style.display = 'block';
+        }
+
         async function cargarGraficoGrande() {
             try {
                 const resp = await fetch(`${API_BASE}/api/historico_par/${monedaFrom}/${monedaTo}?dias=80`);
                 const data = await resp.json();
                 if (data.datos) dibujarGraficoGrande(data.datos);
+                const respP = await fetch(`${API_BASE}/api/pronostico/${monedaFrom}/${monedaTo}?dias=80`);
+                const dataP = await respP.json();
+                if (dataP.success) {
+                    ultimoPronostico = dataP;
+                    aplicarPronostico(dataP);
+                    mostrarSenalEstadistica(dataP.senal_estadistica);
+                }
             } catch (e) {
                 console.log('Error cargando gráfico grande:', e);
             }
@@ -1760,11 +1827,24 @@
                         + `Con esa información, el sistema dice que ${sentRec}, con una confianza del ${confSimp.toFixed(0)}%.</p>`;
                 }
 
+                let pronIAHtml = '';
+                if (data.pronostico && data.pronostico.modelo) {
+                    const pR = data.pronostico;
+                    const ult = pR.pronostico.length - 1;
+                    pronIAHtml = `<p class="ai-simple"><strong>Pronóstico estadístico (${pR.modelo}):</strong> ${fmtCompSigned(pR.cambio_pct || 0)}% en 5 días · rango $${fmtComp(pR.inferior[ult])} a $${fmtComp(pR.superior[ult])}`;
+                    const sE = data.senal_estadistica;
+                    if (sE && sE.etiqueta) {
+                        pronIAHtml += ` · señal ARMA: ${sE.etiqueta} (${Math.round((sE.confianza || 0) * 100)}%)`;
+                    }
+                    pronIAHtml += '</p>';
+                }
+
                 document.getElementById('deepseekResult').innerHTML = `
                     <p><strong>DeepSeek -- Veredicto Final</strong></p>
                     ${resumenSimple}
+                    ${pronIAHtml}
                     <p>${ai.analisis}</p>
-                    <p><small>Basado en Yahoo Finance + VADER (noticias) + DeepSeek</small></p>
+                    <p><small>Basado en Yahoo Finance + VADER (noticias) + DeepSeek + ARIMA/ARMA</small></p>
                 `;
 
                 const badge = document.getElementById('sentimentBadge');
