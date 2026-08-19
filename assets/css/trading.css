@@ -406,13 +406,57 @@ html {
 }
 
 .bloque {
+    position: relative;
+    overflow: hidden;
     width: 42rem;
     max-width: 100%;
     padding: 2.25rem 2.5rem 2rem 2.5rem;
-    background-color: rgba(27, 31, 34, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+    background:
+        linear-gradient(145deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 40%, rgba(255,255,255,0.06) 100%),
+        rgba(18, 22, 26, 0.55);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* Brillos internos estilo liquid glass (reflejo superior e inferior) */
+.bloque::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(140% 90% at 12% 0%, rgba(255,255,255,0.10) 0%, transparent 45%),
+        radial-gradient(90% 70% at 95% 100%, rgba(0,204,255,0.06) 0%, transparent 55%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Destello liquido que se desliza lentamente sobre el vidrio */
+.bloque::after {
+    content: '';
+    position: absolute;
+    top: -80%;
+    left: -40%;
+    width: 55%;
+    height: 260%;
+    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.045) 50%, transparent 58%);
+    transform: rotate(12deg) translateX(-140%);
+    pointer-events: none;
+    animation: glassSheen 12s ease-in-out infinite;
+}
+@keyframes glassSheen {
+    0% { transform: rotate(12deg) translateX(-140%); }
+    60% { transform: rotate(12deg) translateX(320%); }
+    100% { transform: rotate(12deg) translateX(320%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bloque::after { animation: none; opacity: 0; }
 }
 
 .bloque h2.major {
