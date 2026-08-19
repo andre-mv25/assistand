@@ -1264,7 +1264,7 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
     width: 100%;
     max-width: 1560px;
     margin: 0 auto;
-    align-items: start;
+    align-items: stretch;
 }
 
 .bloque {
@@ -1291,6 +1291,9 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
     #grafica {
         grid-column: 1 / -1;
     }
+    #metricas {
+        grid-column: 1 / -1;
+    }
 }
 
 @media (min-width: 1200px) {
@@ -1306,6 +1309,18 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
 }
 
 /* Operación: más espacio interno para que no se vea apretado */
+#dashboard {
+    display: flex;
+    flex-direction: column;
+}
+#dashboard .dash-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+#dashboard .dash-footer {
+    margin-top: auto;
+}
 #dashboard .panel-row {
     gap: 1.25rem;
     justify-content: flex-start;
