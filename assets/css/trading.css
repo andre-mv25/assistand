@@ -70,6 +70,7 @@ body.auth-locked {
 }
 .auth-card {
     position: relative;
+    overflow: hidden;
     width: 23rem;
     max-width: 92%;
     padding: 2.75rem 2.5rem;
@@ -424,7 +425,8 @@ html {
 }
 
 /* Brillos internos estilo liquid glass (reflejo superior e inferior) */
-.bloque::before {
+.bloque::before,
+.auth-card::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -437,7 +439,8 @@ html {
 }
 
 /* Destello liquido que se desliza lentamente sobre el vidrio */
-.bloque::after {
+.bloque::after,
+.auth-card::after {
     content: '';
     position: absolute;
     top: -80%;
@@ -456,7 +459,8 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .bloque::after { animation: none; opacity: 0; }
+    .bloque::after,
+    .auth-card::after { animation: none; opacity: 0; }
 }
 
 .bloque h2.major {
