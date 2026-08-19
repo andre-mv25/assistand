@@ -578,6 +578,49 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
     opacity: 0.8;
     margin-top: 8px;
 }
+.senal-fuentes {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.senal-fuente {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 12px 18px;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left;
+}
+.senal-fuente-label {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.senal-fuente-badge {
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #ffaa00;
+}
+.senal-fuente-badge.compra { color: #00ff88; }
+.senal-fuente-badge.venta { color: #ff4444; }
+.senal-fuente-badge.neutral { color: #ffaa00; }
+.senal-fuente-sub {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+.senal-nota {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    opacity: 0.65;
+    border-top: 1px dashed rgba(255,255,255,0.15);
+    padding-top: 12px;
+}
 
 /* DeepSeek card */
 .deepseek-card {

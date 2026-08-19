@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
-    <link rel="stylesheet" href="assets/css/trading.css?v=7">
+    <link rel="stylesheet" href="assets/css/trading.css?v=8">
 </head>
 <body>
 
@@ -303,7 +303,24 @@
                     </div>
                     <div class="senal-texto" id="senalTexto">Esperando analisis...</div>
                     <div class="senal-detalle" id="senalDetalle" style="display: none;"></div>
-                    <div class="senal-detalle" id="senalEstadistica" style="display: none;"></div>
+
+                    <div class="senal-fuentes" id="senalFuentes" style="display: none;">
+                        <div class="senal-fuente">
+                            <span class="senal-fuente-label">Noticias e IA</span>
+                            <span class="senal-fuente-badge" id="badgeNoticias">—</span>
+                            <span class="senal-fuente-sub" id="subNoticias"></span>
+                        </div>
+                        <div class="senal-fuente">
+                            <span class="senal-fuente-label">Analisis estadistico (ARMA)</span>
+                            <span class="senal-fuente-badge" id="badgeEstadistica">—</span>
+                            <span class="senal-fuente-sub" id="subEstadistica"></span>
+                        </div>
+                    </div>
+
+                    <div class="senal-nota" id="senalNota" style="display: none;">
+                        Las dos tarjetas usan fuentes distintas: <strong>noticias</strong> analiza el sentimiento del mercado
+                        y <strong>estadistica</strong> la tendencia matematica del precio. Pueden coincidir o no.
+                    </div>
                 </div>
             </section>
 
@@ -1372,13 +1389,22 @@
         }
 
         function mostrarSenalEstadistica(s) {
-            const el = document.getElementById('senalEstadistica');
-            if (!el) return;
-            if (!s || !s.etiqueta) { el.style.display = 'none'; return; }
-            const colores = { 'COMPRA': '#00ff88', 'VENTA': '#ff4444', 'NEUTRAL': '#ffaa00' };
-            const icono = s.etiqueta === 'COMPRA' ? '▲' : s.etiqueta === 'VENTA' ? '▼' : '•';
-            el.innerHTML = `<strong>Señal estadística (${s.modelo}):</strong> <span style="color:${colores[s.etiqueta] || '#ffaa00'}">${icono} ${s.etiqueta}</span> — predicción <strong>${fmtCompSigned(s.prediccion_pct || 0)}%</strong> diaria · confianza <strong>${Math.round((s.confianza || 0) * 100)}%</strong>`;
-            el.style.display = 'block';
+            const badge = document.getElementById('badgeEstadistica');
+            const sub = document.getElementById('subEstadistica');
+            const fuentes = document.getElementById('senalFuentes');
+            const nota = document.getElementById('senalNota');
+            if (!badge) return;
+            if (!s || !s.etiqueta) {
+                badge.textContent = '—';
+                badge.className = 'senal-fuente-badge';
+                if (sub) sub.textContent = '';
+                return;
+            }
+            badge.textContent = s.etiqueta;
+            badge.className = 'senal-fuente-badge ' + (s.etiqueta === 'COMPRA' ? 'compra' : s.etiqueta === 'VENTA' ? 'venta' : 'neutral');
+            if (sub) sub.textContent = `prediccion ${fmtCompSigned(s.prediccion_pct || 0)}% diaria · confianza ${Math.round((s.confianza || 0) * 100)}%`;
+            if (fuentes) fuentes.style.display = 'flex';
+            if (nota) nota.style.display = 'block';
         }
 
         async function cargarGraficoGrande() {
@@ -1709,6 +1735,10 @@
             const verde = document.getElementById('semaforoVerde');
             const texto = document.getElementById('senalTexto');
             const detalleEl = document.getElementById('senalDetalle');
+            const badge = document.getElementById('badgeNoticias');
+            const sub = document.getElementById('subNoticias');
+            const fuentes = document.getElementById('senalFuentes');
+            const nota = document.getElementById('senalNota');
             
             if (!rojo || !amarillo || !verde) return;
             
@@ -1718,15 +1748,21 @@
                 verde.classList.add('verde');
                 if (texto) texto.innerHTML = ' SEÑAL: COMPRAR';
                 if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es positivo';
+                if (badge) { badge.textContent = 'COMPRAR'; badge.className = 'senal-fuente-badge compra'; }
             } else if (sentimiento <= -0.05) {
                 rojo.classList.add('rojo');
                 if (texto) texto.innerHTML = ' SEÑAL: VENDER';
                 if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es negativo';
+                if (badge) { badge.textContent = 'VENDER'; badge.className = 'senal-fuente-badge venta'; }
             } else {
                 amarillo.classList.add('amarillo');
                 if (texto) texto.innerHTML = ' SEÑAL: MANTENER';
                 if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es neutral';
+                if (badge) { badge.textContent = 'MANTENER'; badge.className = 'senal-fuente-badge neutral'; }
             }
+            if (sub) sub.textContent = detalle || '';
+            if (fuentes) fuentes.style.display = 'flex';
+            if (nota) nota.style.display = 'block';
         }
         
         function resetearSemaforo() {
@@ -1741,6 +1777,15 @@
             }
             if (texto) texto.innerHTML = ' ESPERANDO ANÁLISIS...';
             if (detalleEl) detalleEl.innerHTML = 'DeepSeek analizando el sentimiento del mercado';
+
+            const fuentes = document.getElementById('senalFuentes');
+            const nota = document.getElementById('senalNota');
+            if (fuentes) fuentes.style.display = 'none';
+            if (nota) nota.style.display = 'none';
+            const badgeN = document.getElementById('badgeNoticias');
+            const badgeE = document.getElementById('badgeEstadistica');
+            if (badgeN) { badgeN.textContent = '—'; badgeN.className = 'senal-fuente-badge'; }
+            if (badgeE) { badgeE.textContent = '—'; badgeE.className = 'senal-fuente-badge'; }
         }
         
         // ========== ANÁLISIS IA (VADER + DeepSeek) ==========
