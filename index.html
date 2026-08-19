@@ -318,8 +318,9 @@
                     </div>
 
                     <div class="senal-nota" id="senalNota" style="display: none;">
-                        Las dos tarjetas usan fuentes distintas: <strong>noticias</strong> analiza el sentimiento del mercado
-                        y <strong>estadistica</strong> la tendencia matematica del precio. Pueden coincidir o no.
+                        El semaforo combina dos fuentes: <strong>noticias</strong> (60%) analiza el sentimiento del mercado
+                        y <strong>estadistica</strong> (40%) la tendencia matematica del precio. Si ambas coinciden, la senal
+                        es mas fuerte; si se contradicen, baja la confianza y la senal queda "con reserva".
                     </div>
                 </div>
             </section>
@@ -528,6 +529,8 @@
         let maxCapitalSim = 0;
         let graficoGrande = null;
         let ultimoPronostico = null;
+        let senalNoticias = null;
+        let senalEstadistica = null;
         let graficoSource = [];
         let graficoOffset = 0;
         let graficoLen = 1; // 1 = mostrar todo el historico; >2 = ventana con zoom
@@ -1388,23 +1391,88 @@
             graficoGrande.update('none');
         }
 
+        function statScore(s) {
+            if (!s || !s.etiqueta) return 0;
+            const signo = s.etiqueta === 'COMPRA' ? 1 : s.etiqueta === 'VENTA' ? -1 : 0;
+            if (signo === 0) return 0;
+            return clampNum(signo * Math.min(1, Math.abs(s.prediccion_pct || 0) / 0.5), -1, 1);
+        }
+
+        function actualizarVeredicto() {
+            const rojo = document.getElementById('semaforoRojo');
+            const amarillo = document.getElementById('semaforoAmarillo');
+            const verde = document.getElementById('semaforoVerde');
+            const texto = document.getElementById('senalTexto');
+            const detalleEl = document.getElementById('senalDetalle');
+            const fuentes = document.getElementById('senalFuentes');
+            const nota = document.getElementById('senalNota');
+
+            const n = senalNoticias;
+            const e = senalEstadistica;
+
+            if (fuentes && (n || e)) fuentes.style.display = 'flex';
+            if (nota && (n || e)) nota.style.display = 'block';
+
+            if (!n && !e) {
+                if (texto) texto.innerHTML = ' ESPERANDO ANÁLISIS...';
+                if (detalleEl) detalleEl.innerHTML = 'DeepSeek analizando el sentimiento del mercado';
+                return;
+            }
+
+            let puntaje, fuenteInfo, reserva = false;
+            if (n && e) {
+                const sn = clampNum(n.score, -1, 1);
+                const se = clampNum(e.score, -1, 1);
+                puntaje = 0.6 * sn + 0.4 * se;
+                const signoN = Math.sign(sn) || 0;
+                const signoE = Math.sign(se) || 0;
+                if (signoN !== 0 && signoE !== 0 && signoN !== signoE) reserva = true;
+                fuenteInfo = `Combinacion: 60% noticias (${n.etiqueta}) + 40% estadistica (${e.etiqueta})`;
+            } else if (n) {
+                puntaje = n.score;
+                fuenteInfo = `Usando solo noticias (${n.etiqueta}): el analisis estadistico aun no esta disponible`;
+            } else {
+                puntaje = e.score;
+                fuenteInfo = `Usando solo estadistica (${e.etiqueta}): el analisis de noticias aun no esta disponible`;
+            }
+
+            let confianza = clampNum(0.5 + Math.abs(puntaje) * 0.8, 0, 1);
+            if (reserva) confianza *= 0.6;
+
+            let clase, etiqueta;
+            if (puntaje >= 0.05) { clase = 'verde'; etiqueta = 'COMPRAR'; }
+            else if (puntaje <= -0.05) { clase = 'rojo'; etiqueta = 'VENDER'; }
+            else { clase = 'amarillo'; etiqueta = 'MANTENER'; }
+
+            if (rojo && amarillo && verde) {
+                [rojo, amarillo, verde].forEach(el => el.classList.remove('verde', 'amarillo', 'rojo'));
+                document.getElementById('semaforo' + (clase === 'verde' ? 'Verde' : clase === 'rojo' ? 'Rojo' : 'Amarillo')).classList.add(clase);
+            }
+            if (texto) texto.innerHTML = ' SEÑAL: ' + etiqueta;
+            if (detalleEl) detalleEl.innerHTML = fuenteInfo + (reserva ? ' (señal con reserva)' : '') + ` · confianza ${Math.round(confianza * 100)}%`;
+        }
+
         function mostrarSenalEstadistica(s) {
             const badge = document.getElementById('badgeEstadistica');
             const sub = document.getElementById('subEstadistica');
-            const fuentes = document.getElementById('senalFuentes');
-            const nota = document.getElementById('senalNota');
             if (!badge) return;
             if (!s || !s.etiqueta) {
+                senalEstadistica = null;
                 badge.textContent = '—';
                 badge.className = 'senal-fuente-badge';
                 if (sub) sub.textContent = '';
+                actualizarVeredicto();
                 return;
             }
+            senalEstadistica = {
+                score: statScore(s),
+                etiqueta: s.etiqueta,
+                detalle: `prediccion ${fmtCompSigned(s.prediccion_pct || 0)}% diaria · confianza ${Math.round((s.confianza || 0) * 100)}%`
+            };
             badge.textContent = s.etiqueta;
             badge.className = 'senal-fuente-badge ' + (s.etiqueta === 'COMPRA' ? 'compra' : s.etiqueta === 'VENTA' ? 'venta' : 'neutral');
-            if (sub) sub.textContent = `prediccion ${fmtCompSigned(s.prediccion_pct || 0)}% diaria · confianza ${Math.round((s.confianza || 0) * 100)}%`;
-            if (fuentes) fuentes.style.display = 'flex';
-            if (nota) nota.style.display = 'block';
+            if (sub) sub.textContent = senalEstadistica.detalle;
+            actualizarVeredicto();
         }
 
         async function cargarGraficoGrande() {
@@ -1730,62 +1798,26 @@
 
         // ========== SEMÁFORO ==========
         function actualizarSemaforo(sentimiento, detalle) {
-            const rojo = document.getElementById('semaforoRojo');
-            const amarillo = document.getElementById('semaforoAmarillo');
-            const verde = document.getElementById('semaforoVerde');
-            const texto = document.getElementById('senalTexto');
-            const detalleEl = document.getElementById('senalDetalle');
             const badge = document.getElementById('badgeNoticias');
             const sub = document.getElementById('subNoticias');
-            const fuentes = document.getElementById('senalFuentes');
-            const nota = document.getElementById('senalNota');
-            
-            if (!rojo || !amarillo || !verde) return;
-            
-            [rojo, amarillo, verde].forEach(el => el.classList.remove('verde', 'amarillo', 'rojo'));
-            
-            if (sentimiento >= 0.05) {
-                verde.classList.add('verde');
-                if (texto) texto.innerHTML = ' SEÑAL: COMPRAR';
-                if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es positivo';
-                if (badge) { badge.textContent = 'COMPRAR'; badge.className = 'senal-fuente-badge compra'; }
-            } else if (sentimiento <= -0.05) {
-                rojo.classList.add('rojo');
-                if (texto) texto.innerHTML = ' SEÑAL: VENDER';
-                if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es negativo';
-                if (badge) { badge.textContent = 'VENDER'; badge.className = 'senal-fuente-badge venta'; }
-            } else {
-                amarillo.classList.add('amarillo');
-                if (texto) texto.innerHTML = ' SEÑAL: MANTENER';
-                if (detalleEl) detalleEl.innerHTML = detalle || 'El sentimiento del mercado es neutral';
-                if (badge) { badge.textContent = 'MANTENER'; badge.className = 'senal-fuente-badge neutral'; }
-            }
-            if (sub) sub.textContent = detalle || '';
-            if (fuentes) fuentes.style.display = 'flex';
-            if (nota) nota.style.display = 'block';
+            const etiqueta = sentimiento >= 0.05 ? 'COMPRAR' : sentimiento <= -0.05 ? 'VENDER' : 'MANTENER';
+            senalNoticias = {
+                score: clampNum(sentimiento, -1, 1),
+                etiqueta: etiqueta,
+                detalle: detalle || ''
+            };
+            if (badge) { badge.textContent = etiqueta; badge.className = 'senal-fuente-badge ' + (etiqueta === 'COMPRAR' ? 'compra' : etiqueta === 'VENDER' ? 'venta' : 'neutral'); }
+            if (sub) sub.textContent = senalNoticias.detalle;
+            actualizarVeredicto();
         }
         
         function resetearSemaforo() {
-            const rojo = document.getElementById('semaforoRojo');
-            const amarillo = document.getElementById('semaforoAmarillo');
-            const verde = document.getElementById('semaforoVerde');
-            const texto = document.getElementById('senalTexto');
-            const detalleEl = document.getElementById('senalDetalle');
-            
-            if (rojo && amarillo && verde) {
-                [rojo, amarillo, verde].forEach(el => el.classList.remove('verde', 'amarillo', 'rojo'));
-            }
-            if (texto) texto.innerHTML = ' ESPERANDO ANÁLISIS...';
-            if (detalleEl) detalleEl.innerHTML = 'DeepSeek analizando el sentimiento del mercado';
-
-            const fuentes = document.getElementById('senalFuentes');
-            const nota = document.getElementById('senalNota');
-            if (fuentes) fuentes.style.display = 'none';
-            if (nota) nota.style.display = 'none';
+            senalNoticias = null;
             const badgeN = document.getElementById('badgeNoticias');
-            const badgeE = document.getElementById('badgeEstadistica');
             if (badgeN) { badgeN.textContent = '—'; badgeN.className = 'senal-fuente-badge'; }
-            if (badgeE) { badgeE.textContent = '—'; badgeE.className = 'senal-fuente-badge'; }
+            const subN = document.getElementById('subNoticias');
+            if (subN) subN.textContent = '';
+            actualizarVeredicto();
         }
         
         // ========== ANÁLISIS IA (VADER + DeepSeek) ==========
