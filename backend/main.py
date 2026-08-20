@@ -399,7 +399,6 @@ async def get_banxico_tipo_cambio_all():
 class RegisterRequest(BaseModel):
     username: str
     password: str
-    email: str = ""
 
 class LoginRequest(BaseModel):
     username: str
@@ -421,6 +420,19 @@ class SimulacionRequest(BaseModel):
     recomendacion: str = ""
     confianza: float = 0
     analisis: str = ""
+
+
+def validar_password(p: str):
+    """Valida la politica de contrasenas: minimo 8, mayuscula, numero y caracter especial."""
+    if len(p) < 8:
+        return False, "La contrasena debe tener al menos 8 caracteres"
+    if not re.search(r"[A-Z]", p):
+        return False, "La contrasena debe incluir al menos una mayuscula"
+    if not re.search(r"[0-9]", p):
+        return False, "La contrasena debe incluir al menos un numero"
+    if not re.search(r"[^A-Za-z0-9]", p):
+        return False, "La contrasena debe incluir al menos un caracter especial (!, @, #, ...)"
+    return True, ""
 
 
 def hash_password(password: str) -> str:
@@ -486,20 +498,19 @@ async def register(req: RegisterRequest):
 
     if len(req.username.strip()) < 3:
         return JSONResponse(content={"error": "El usuario debe tener al menos 3 caracteres"}, status_code=400)
-    if len(req.password.strip()) < 4:
-        return JSONResponse(content={"error": "La contraseña debe tener al menos 4 caracteres"}, status_code=400)
+    valida_ok, valida_msg = validar_password(req.password.strip())
+    if not valida_ok:
+        return JSONResponse(content={"error": valida_msg}, status_code=400)
 
     existing = await db.users.find_one({"username_hash": hash_key(req.username.strip())})
     if existing:
         return JSONResponse(content={"error": "El nombre de usuario ya existe"}, status_code=400)
 
     hashed = hash_password(req.password.strip())
-    email = req.email.strip()
     await insert_dual("users", {
         "username_hash": hash_key(req.username.strip()),
         "username": req.username.strip(),
         "password": hashed,
-        "email_enc": encrypt_text(email) if email else None,
         "created_at": datetime.utcnow(),
     })
     token = await crear_sesion(req.username.strip())

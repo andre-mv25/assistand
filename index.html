@@ -70,11 +70,8 @@
                 <div class="auth-input-wrap">
                     <input type="text" id="regUsername" placeholder="Usuario (min 3 caracteres)" class="auth-input">
                 </div>
-                <div class="auth-input-wrap">
-                    <input type="email" id="regEmail" placeholder="Email (opcional)" class="auth-input">
-                </div>
                 <div class="auth-input-wrap has-toggle">
-                    <input type="password" id="regPassword" placeholder="Contraseña (min 4 caracteres)" class="auth-input" autocomplete="new-password" data-lpignore="true">
+                    <input type="password" id="regPassword" placeholder="Contraseña (min 8: mayúscula, número y símbolo)" class="auth-input" autocomplete="new-password" data-lpignore="true">
                     <button type="button" class="auth-toggle" data-target="regPassword" tabindex="-1" aria-label="Mostrar contraseña">
                         <i class="fas fa-eye"></i>
                     </button>
@@ -632,7 +629,6 @@
             registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const username = document.getElementById('regUsername').value.trim();
-                const email = document.getElementById('regEmail').value.trim();
                 const password = document.getElementById('regPassword').value;
                 const errorEl = registerError;
                 errorEl.textContent = '';
@@ -640,11 +636,15 @@
                     errorEl.textContent = 'Ingresa usuario y contraseña';
                     return;
                 }
+                if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+                    errorEl.textContent = 'La contraseña debe tener mínimo 8 caracteres, con al menos una mayúscula, un número y un carácter especial';
+                    return;
+                }
                 try {
                     const resp = await fetch(`${API_BASE}/api/auth/register`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password, email }),
+                        body: JSON.stringify({ username, password }),
                     });
                     const data = await resp.json();
                     if (data.success) {
