@@ -183,6 +183,16 @@ async def _analizar_con_cache(nombre: str, clave_args: tuple, prompt: str, max_t
 
 
 async def analizar_sentimiento(moneda: str, precio: float, cambio: float):
+    """Analiza con DeepSeek el sentimiento del mercado para una moneda.
+
+    Args:
+        moneda: codigo de la divisa.
+        precio: cotizacion actual.
+        cambio: variacion porcentual del dia.
+    Returns:
+        Diccionario con ``sentimiento``, ``valor``, ``analisis``,
+        ``recomendacion`` y ``confianza``; o ``None`` si no hay clave/cache.
+    """
     if not DEEPSEEK_API_KEY:
         return None
 
@@ -204,6 +214,15 @@ Responde UNICAMENTE con un JSON valido sin markdown:
 
 
 async def analizar_semaforo(moneda: str, noticias: list):
+    """Analiza con DeepSeek las noticias recientes para emitir el semaforo.
+
+    Args:
+        moneda: codigo de la divisa.
+        noticias: lista de articulos (dicts con fuente, titulo, descripcion).
+    Returns:
+        Diccionario con ``semaforo``, ``sentimiento``, ``confianza``,
+        ``explicacion`` y ``noticias_clave``; o ``None`` si falla.
+    """
     if not DEEPSEEK_API_KEY or not noticias:
         return None
 
@@ -231,6 +250,17 @@ Responde UNICAMENTE con un JSON valido sin markdown:
 
 
 async def analizar_historico(moneda: str, precios: list[dict], capital_inicial: float, capital_final: float, rendimiento: float, sharpe: float, drawdown: float, win_rate: float, vader: dict | None = None, tipos_cambio: dict | None = None, acciones: list | None = None, pronostico: dict | None = None, senal_stat: dict | None = None):
+    """Genera el veredicto final de DeepSeek sobre una simulacion completa.
+
+    Construye un prompt con los resultados de la simulacion, indicadores tecnicos
+    (SMA, RSI, volatilidad), pronostico ARIMA/ARMA, sentimiento VADER, tipos de
+    cambio y acciones sugeridas, y pide a DeepSeek un JSON con el veredicto.
+
+    Returns:
+        Diccionario con ``sentimiento``, ``valor``, ``analisis`` (en lenguaje
+        simple), ``recomendacion``, ``confianza``, ``patron_encontrado``,
+        ``opciones`` y ``opciones_acciones``; o ``None`` si falla.
+    """
     if not DEEPSEEK_API_KEY or not precios:
         return None
 

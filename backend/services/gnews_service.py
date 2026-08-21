@@ -1,3 +1,8 @@
+"""Servicio de noticias via GNews API.
+
+Consulta el endpoint de busqueda de GNews (espanol / Mexico) con cache interna
+de 15 minutos para no repetir llamadas a la API y normaliza los articulos.
+"""
 import httpx
 import re
 import time
@@ -9,6 +14,7 @@ _cache = {"timestamp": 0.0, "data": None}
 
 
 def _limpiar_texto(texto: str) -> str:
+    """Normaliza espacios y recorta un texto."""
     return re.sub(r"\s+", " ", texto or "").strip()
 
 
@@ -18,6 +24,16 @@ async def obtener_noticias_gnews(
     idioma: str = "es",
     pais: str = "mx",
 ) -> list[dict] | None:
+    """Obtiene noticias de GNews (con cache de 15 min) y las normaliza.
+
+    Args:
+        query: terminos de busqueda.
+        cantidad: maximo de articulos.
+        idioma: idioma (es).
+        pais: codigo de pais (mx).
+    Returns:
+        Lista de articulos normalizados o ``None`` si falla.
+    """
     if not GNEWS_API_KEY:
         return None
 

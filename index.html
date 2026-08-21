@@ -492,9 +492,24 @@
         document.body.classList.add('js-ready');
         document.body.classList.add('auth-locked');
         // ============================================
-        // TRADING ASSISTANT — DATOS REALES vía yfinance
+        // TRADING ASSISTANT — FRONTEND (SPA en español)
         // ============================================
-        
+        // Todo el comportamiento de la interfaz se orquesta en este script:
+        //
+        //   · Autenticación  -> registro/login con token (localStorage), menú de usuario
+        //   · Operación      -> selección de par, monto, iniciar/pausar/reiniciar simulación
+        //   · Datos          -> cotizaciones en vivo (Yahoo Finance) y tipo de cambio
+        //   · Gráfica        -> Chart.js con SMA5/SMA20, zoom/pan y pronóstico ARIMA
+        //   · Simulación     -> estrategia SMA crossover con stop-loss, día por tick
+        //   · Métricas       -> rendimiento, Sharpe, drawdown, win rate
+        //   · Semáforo       -> veredicto combinado 60% noticias/IA + 40% estadística ARMA
+        //   · Análisis IA    -> VADER (noticias) + DeepSeek (veredicto razonado)
+        //   · Historial      -> comparativa con simulaciones previas guardadas (cifradas)
+        //
+        // API_BASE: en localhost apunta a http://localhost:8000; en producción usa
+        // el mismo origen (mismo dominio que la API).
+        // ============================================
+
         const API_BASE =
             location.hostname === 'localhost' || location.hostname === '127.0.0.1'
                 ? 'http://localhost:8000'
@@ -1118,6 +1133,11 @@
                 cargarPar();
             });
         }
+
+        // ========== DATOS EN VIVO Y GRÁFICA ==========
+        // cargarPrecios / cargarPar: consultan cotizaciones y el par seleccionado.
+        // dibujarGraficoGrande: dibuja precio + SMA5/SMA20 con Chart.js.
+        // graficoZoom / redibujarGrafico: controlan zoom y panorama de la gráfica.
         
         async function cargarPrecios() {
             try {

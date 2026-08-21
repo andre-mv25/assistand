@@ -1,3 +1,10 @@
+"""Servicio de datos de mercado via Yahoo Finance (libreria ``yfinance``).
+
+Provee cotizaciones Forex en tiempo real, historicos de precios y calculo de
+pares de divisas (incluida la tasa cruzada cuando ninguna moneda es el USD).
+Las funciones ``_sincrono_*`` ejecutan la libreria bloqueante en un hilo y las
+funciones ``async`` las envuelven para usarse con FastAPI/Motor.
+"""
 import asyncio
 import yfinance as yf
 from datetime import datetime, timedelta
@@ -10,6 +17,11 @@ PARES_FOREX = {
 }
 
 def _sincrono_obtener_precios():
+    """Descarga cotizaciones del dia (intervalo 1 min) para USD, MXN, JPY y EUR.
+
+    Devuelve un diccionario con ``{"precio": ..., "cambio": ...}`` por moneda,
+    o ``None`` si la descarga falla. El USD se define como referencia (1.0).
+    """
     tickers = [v["ticker"] for v in PARES_FOREX.values() if v["ticker"] != "USD=X"]
     data = yf.download(tickers, period="1d", interval="1m", progress=False)
     if data is None or data.empty:
@@ -43,6 +55,14 @@ def _sincrono_obtener_precios():
     return resultados
 
 def _sincrono_obtener_historico(moneda: str, dias: int = 30):
+    """Obtiene el historico diario de cierre de una moneda (en USD por unidad).
+
+    Args:
+        moneda: codigo (USD, MXN, JPY, EUR).
+        dias: cantidad de dias hacia atras.
+    Returns:
+        Lista de ``{"fecha": YYYY-MM-DD, "precio": float}`` o ``None`` si falla.
+    """
     cfg = PARES_FOREX.get(moneda.upper())
     if not cfg or moneda.upper() == "USD":
         return None
@@ -67,13 +87,16 @@ def _sincrono_obtener_historico(moneda: str, dias: int = 30):
 
 
 async def obtener_precios_forex():
+    """Devuelve las cotizaciones Forex actuales (envuelve la llamada bloqueante)."""
     return await asyncio.to_thread(_sincrono_obtener_precios)
 
 async def obtener_historico_forex(moneda: str, dias: int = 30):
+    """Devuelve el historico diario de una moneda (envuelve la llamada bloqueante)."""
     return await asyncio.to_thread(_sincrono_obtener_historico, moneda, dias)
 
 
 def _calcular_par(from_curr: str, to_curr: str, precios: dict):
+    """Calcula la tasa FROM/TO a partir de las cotizaciones en USD de ambas."""
     usd_from = precios.get(from_curr, {}).get("precio")
     usd_to = precios.get(to_curr, {}).get("precio")
     if not usd_from or not usd_to:
@@ -82,6 +105,11 @@ def _calcular_par(from_curr: str, to_curr: str, precios: dict):
 
 
 def _sincrono_obtener_historico_par(from_curr: str, to_curr: str, dias: int = 30):
+    """Obtiene el historico diario de un par de divisas FROM/TO.
+
+    Si una moneda es el USD usa el ticker directo; si ambas son no-USD calcula
+    la tasa cruzada combinando los dos historicos por fecha.
+    """
     cfg_from = PARES_FOREX.get(from_curr)
     cfg_to = PARES_FOREX.get(to_curr)
     if not cfg_from or not cfg_to:
@@ -132,6 +160,11 @@ def _sincrono_obtener_historico_par(from_curr: str, to_curr: str, dias: int = 30
 
 
 async def obtener_precio_par(from_curr: str, to_curr: str):
+    """Devuelve la tasa actual del par FROM/TO con su marca de tiempo.
+
+    Returns:
+        ``{"from", "to", "rate", "timestamp"}`` o ``None`` si no se pudo calcular.
+    """
     precios = await obtener_precios_forex()
     if not precios:
         return None
@@ -147,4 +180,5 @@ async def obtener_precio_par(from_curr: str, to_curr: str):
 
 
 async def obtener_historico_par(from_curr: str, to_curr: str, dias: int = 30):
+    """Devuelve el historico diario del par FROM/TO (envuelve la llamada bloqueante)."""
     return await asyncio.to_thread(_sincrono_obtener_historico_par, from_curr.upper(), to_curr.upper(), dias)

@@ -1,3 +1,8 @@
+"""Servicio de tipo de cambio oficial via API del Banco de Mexico (Banxico).
+
+Consulta las series FIX de tipo de cambio (USD, EUR, JPY) publicadas por
+Banxico y devuelve el ultimo valor observado para cada moneda.
+"""
 import httpx
 from datetime import datetime
 from config import BANXICO_API_KEY
@@ -13,6 +18,14 @@ SERIES_TIPO_CAMBIO = {
 
 
 async def obtener_tipo_cambio(moneda: str = "USD", fecha: str | None = None) -> dict | None:
+    """Obtiene el tipo de cambio oficial FIX de una moneda.
+
+    Args:
+        moneda: USD, EUR o JPY.
+        fecha: fecha en formato YYYY-MM-DD (por defecto la de hoy).
+    Returns:
+        ``{"moneda", "valor", "fecha", "fuente", "serie"}`` o ``None`` si falla.
+    """
     if not BANXICO_API_KEY:
         return None
 
@@ -53,6 +66,13 @@ async def obtener_tipo_cambio(moneda: str = "USD", fecha: str | None = None) -> 
 
 
 async def obtener_tipo_cambio_multiples(monedas: list[str] | None = None) -> dict | None:
+    """Obtiene el tipo de cambio FIX de varias monedas a la vez.
+
+    Args:
+        monedas: lista de codigos; por defecto todas las series definidas.
+    Returns:
+        Diccionario ``{codigo: resultado}`` o ``None`` si no hay resultados.
+    """
     if not BANXICO_API_KEY:
         return None
 

@@ -1,3 +1,15 @@
+"""API REST de Trading Assistant (FastAPI).
+
+Punto de entrada del backend: define todos los endpoints de la API, sirve el
+frontend (index.html + estaticos) y orquesta los servicios externos
+(Yahoo Finance, noticias, VADER, DeepSeek, Banxico, DOF, CoinGecko) y la base
+de datos (MongoDB Atlas con respaldo local).
+
+Rutas principales:
+- ``/`` y estaticos: frontend.
+- ``/api/*``: endpoints JSON (precios, par, historico, pronostico, analisis,
+  noticias, vader, banxico, dof, tendencias, acciones, auth, simulaciones).
+"""
 from fastapi import FastAPI, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -58,6 +70,7 @@ def _fallback_vader(moneda: str, rendimiento: float, sharpe: float, vader: dict 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Ciclo de vida de la aplicacion: conecta la BD al iniciar y la cierra al parar."""
     await connect_db()
     yield
     await close_db()
@@ -67,6 +80,7 @@ app = FastAPI(title="Trading Assistant API", version="1.0.0", lifespan=lifespan)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
+    """Manejador global de excepciones: devuelve 500 con el detalle del error."""
     print(f"ERROR en {request.url.path}: {exc}")
     return JSONResponse(content={"error": str(exc)}, status_code=500)
 
@@ -82,16 +96,19 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 @app.get("/")
 async def servir_frontend():
+    """Sirve el archivo index.html del frontend."""
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 
 @app.get("/api/test")
 async def test_backend():
+    """Endpoint de prueba: confirma que la API responde."""
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
 
 @app.get("/api/precios")
 async def get_precios():
+    """Obtiene las cotizaciones Forex actuales de todas las monedas soportadas."""
     monedas = await obtener_precios_forex()
     if monedas is None:
         return {"error": "No se pudieron obtener precios Forex"}, 503
@@ -114,6 +131,11 @@ async def get_precios():
 
 @app.get("/api/precios/{moneda}")
 async def get_precio_moneda(moneda: str):
+    """Obtiene la cotizacion actual de una moneda concreta.
+
+    Args:
+        moneda: codigo (USD, MXN, JPY, EUR).
+    """
     monedas = await obtener_precios_forex()
     if monedas is None:
         return {"error": "No se pudieron obtener precios Forex"}, 503
@@ -130,6 +152,7 @@ async def get_precio_moneda(moneda: str):
 
 @app.get("/api/par/{from_curr}/{to_curr}")
 async def get_par(from_curr: str, to_curr: str):
+    """Obtiene la tasa de cambio actual del par FROM/TO (ej. USD/MXN)."""
     par = await obtener_precio_par(from_curr.upper(), to_curr.upper())
     if par is None:
         return {"error": "No se pudo obtener el par"}, 503
@@ -138,6 +161,13 @@ async def get_par(from_curr: str, to_curr: str):
 
 @app.get("/api/historico_par/{from_curr}/{to_curr}")
 async def get_historico_par(from_curr: str, to_curr: str, dias: int = Query(60)):
+    """Obtiene el historico diario del par FROM/TO.
+
+    Args:
+        dias: cantidad de dias del historico (default 60).
+    Returns:
+        ``{"from", "to", "datos": [...], "timestamp"}``.
+    """
     historico = await obtener_historico_par(from_curr.upper(), to_curr.upper(), dias)
     if historico is None:
         return {"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, 503
@@ -170,6 +200,13 @@ async def get_pronostico(from_curr: str, to_curr: str, dias: int = Query(80)):
 
 @app.get("/api/analisis")
 async def get_analisis(moneda: str = Query("USD")):
+    """Analiza una moneda: sentimiento DeepSeek + semaforo basado en noticias.
+
+    Args:
+        moneda: codigo de la divisa (default USD).
+    Returns:
+        ``{"moneda", "precio", "cambio", "analisis_deepseek", "semaforo", ...}``.
+    """
     moneda = moneda.upper()
     monedas = await obtener_precios_forex()
     if monedas is None:
@@ -210,6 +247,7 @@ async def get_analisis(moneda: str = Query("USD")):
 
 @app.get("/api/tendencias")
 async def get_tendencias():
+    """Obtiene las criptomonedas mas buscadas (trending) en CoinGecko."""
     tendencias = await obtener_tendencias()
     if tendencias is None:
         return {"error": "No se pudieron obtener tendencias"}, 503
@@ -221,6 +259,12 @@ async def get_tendencias():
 
 @app.get("/api/historico/{moneda}")
 async def get_historico(moneda: str, dias: int = Query(30)):
+    """Obtiene el historico diario de una moneda frente al USD.
+
+    Args:
+        moneda: codigo de la divisa (JPY, EUR, MXN...).
+        dias: cantidad de dias del historico (default 30).
+    """
     historico = await obtener_historico_forex(moneda.upper(), dias)
     if historico is None:
         return {"error": f"No se pudo obtener historico para {moneda.upper()}"}, 503
@@ -233,6 +277,14 @@ async def get_historico(moneda: str, dias: int = Query(30)):
 
 @app.post("/api/analizar_historico")
 async def post_analizar_historico(data: dict = Body(...)):
+    """Analiza una simulacion completa con DeepSeek (veredicto final).
+
+    Recibe el historico de precios y las metricas de la simulacion, calcula el
+    pronostico ARIMA/ARMA, envia todo a DeepSeek y guarda el analisis cifrado.
+
+    Returns:
+        ``{"moneda", "analisis", "pronostico", "senal_estadistica", "timestamp"}``.
+    """
     moneda = data.get("moneda", "USD").upper()
     precios = data.get("precios", [])
     capital_inicial = data.get("capital_inicial", 0)
@@ -320,6 +372,7 @@ async def post_analizar_historico(data: dict = Body(...)):
 
 @app.get("/api/status")
 async def get_status():
+    """Estado de la API y de la conexion a la base de datos (Atlas/local)."""
     return {
         "api": "online",
         "version": "1.0.0",
@@ -335,6 +388,13 @@ async def get_noticias(
     fuentes: str = Query(None),
     cantidad: int = Query(10, ge=1, le=50),
 ):
+    """Busca noticias financieras en NewsAPI.
+
+    Args:
+        query: terminos de busqueda.
+        fuentes: lista de fuentes separadas por coma (opcional).
+        cantidad: numero de articulos (1-50).
+    """
     lista_fuentes = fuentes.split(",") if fuentes else None
     noticias = await obtener_noticias(query, lista_fuentes, cantidad)
     if noticias is None:
@@ -352,6 +412,7 @@ async def get_portadas(
     pais: str = Query("us"),
     cantidad: int = Query(5, ge=1, le=20),
 ):
+    """Obtiene las portadas de noticias por categoria y pais (NewsAPI)."""
     noticias = await obtener_portadas(categoria, pais, cantidad)
     if noticias is None:
         return {"error": "No se pudieron obtener portadas"}, 503
@@ -364,6 +425,12 @@ async def get_portadas(
 
 @app.get("/api/vader")
 async def get_vader(query: str = Query("forex OR trading OR divisas"), cantidad: int = Query(2000, ge=1, le=2000)):
+    """Analiza el sentimiento del mercado con VADER sobre las noticias obtenidas.
+
+    Args:
+        query: terminos de busqueda.
+        cantidad: maximo de articulos a analizar (hasta 2000).
+    """
     resultado = await analizar_vader(query=query, cantidad=cantidad)
     if resultado is None:
         return {"error": "No se pudieron analizar noticias con VADER"}, 503
@@ -372,6 +439,7 @@ async def get_vader(query: str = Query("forex OR trading OR divisas"), cantidad:
 
 @app.get("/api/dof/tipo_cambio")
 async def get_dof_tipo_cambio():
+    """Obtiene el tipo de cambio del dolar publicado en el DOF (Diario Oficial)."""
     resultado = await obtener_tipo_cambio_dolar()
     if resultado is None:
         return {"error": "No se pudo obtener el tipo de cambio del DOF"}, 503
@@ -380,6 +448,7 @@ async def get_dof_tipo_cambio():
 
 @app.get("/api/banxico/tipo_cambio")
 async def get_banxico_tipo_cambio(moneda: str = Query("USD")):
+    """Obtiene el tipo de cambio oficial FIX de Banxico para una moneda."""
     resultado = await obtener_tipo_cambio(moneda)
     if resultado is None:
         return {"error": f"No se pudo obtener el tipo de cambio de {moneda} en Banxico"}, 503
@@ -388,6 +457,7 @@ async def get_banxico_tipo_cambio(moneda: str = Query("USD")):
 
 @app.get("/api/banxico/tipo_cambio_all")
 async def get_banxico_tipo_cambio_all():
+    """Obtiene los tipos de cambio FIX de Banxico para todas las monedas soportadas."""
     resultado = await obtener_tipo_cambio_multiples()
     if resultado is None:
         return {"error": "No se pudieron obtener los tipos de cambio de Banxico"}, 503
@@ -454,6 +524,13 @@ def generar_token() -> str:
 
 
 async def crear_sesion(username: str) -> str:
+    """Crea una sesion para el usuario: genera un token y lo guarda (hash) en la BD.
+
+    Args:
+        username: nombre del usuario.
+    Returns:
+        El token de sesion (64 caracteres hex). La BD guarda solo su hash.
+    """
     token = generar_token()
     db = get_db()
     if db is not None:
@@ -472,6 +549,14 @@ async def crear_sesion(username: str) -> str:
 
 
 async def validar_token(token: str):
+    """Valida un token de sesion contra la base de datos.
+
+    Args:
+        token: token de sesion a validar.
+    Returns:
+        El documento de la sesion (con ``username``) si es valido y no ha
+        expirado; o ``None`` en caso contrario.
+    """
     if not token:
         return None
     db = get_db()
@@ -492,6 +577,14 @@ async def validar_token(token: str):
 
 @app.post("/api/auth/register")
 async def register(req: RegisterRequest):
+    """Registra un nuevo usuario (politica de contrasena fuerte) y abre sesion.
+
+    Args:
+        req: ``{"username", "password"}`` (el usuario debe tener minimo 3 chars
+        y la contrasena minimo 8 con mayuscula, numero y simbolo).
+    Returns:
+        ``{"success", "message", "token", "username"}``.
+    """
     db = get_db()
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
@@ -519,6 +612,11 @@ async def register(req: RegisterRequest):
 
 @app.post("/api/auth/login")
 async def login(req: LoginRequest):
+    """Inicia sesion verificando credenciales y crea un token de sesion.
+
+    Returns:
+        ``{"success", "message", "token", "username"}``.
+    """
     db = get_db()
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
@@ -536,6 +634,7 @@ async def login(req: LoginRequest):
 
 @app.get("/api/auth/me")
 async def auth_me(token: str = Query("")):
+    """Devuelve el usuario autenticado con el token, o 401 si es invalido."""
     sesion = await validar_token(token)
     if not sesion:
         return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
@@ -544,6 +643,7 @@ async def auth_me(token: str = Query("")):
 
 @app.post("/api/auth/logout")
 async def logout(token: str = Query("")):
+    """Cierra la sesion: elimina el documento de la sesion de la base de datos."""
     db = get_db()
     if db is not None and token:
         try:
@@ -566,6 +666,13 @@ SIMULACION_CAMPOS_NUMERO = [
 
 @app.post("/api/simulaciones")
 async def guardar_simulacion(req: SimulacionRequest):
+    """Guarda el resultado de una simulacion vinculada al usuario autenticado.
+
+    Cifra con Fernet los campos de texto y numericos sensibles antes de
+    insertarlos en la coleccion ``simulaciones``.
+    Returns:
+        ``{"success", "id"}`` del documento creado.
+    """
     sesion = await validar_token(req.token)
     if not sesion:
         return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
@@ -594,6 +701,13 @@ async def guardar_simulacion(req: SimulacionRequest):
 
 @app.get("/api/simulaciones")
 async def listar_simulaciones(token: str = Query("")):
+    """Lista el historial de simulaciones del usuario (descifrando los campos).
+
+    Args:
+        token: token de sesion del usuario.
+    Returns:
+        ``{"success", "simulaciones": [...]}`` (hasta 50, ordenadas por fecha).
+    """
     sesion = await validar_token(token)
     if not sesion:
         return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
@@ -619,6 +733,7 @@ async def listar_simulaciones(token: str = Query("")):
 
 @app.delete("/api/simulaciones/{sim_id}")
 async def eliminar_simulacion(sim_id: str, token: str = Query("")):
+    """Elimina una simulacion del usuario (solo si le pertenece)."""
     sesion = await validar_token(token)
     if not sesion:
         return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
@@ -640,6 +755,7 @@ app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 
 def abrir_navegador():
+    """Abre el navegador en http://localhost:8000 (solo ejecucion local)."""
     webbrowser.open("http://localhost:8000")
 
 
@@ -647,6 +763,11 @@ CLOUDFLARE_URL = None
 
 
 def iniciar_cloudflare():
+    """Levanta un tunel de Cloudflare (cloudflared) hacia el servidor local.
+
+    Permite acceder al sitio por HTTPS desde cualquier dispositivo mientras se
+    ejecuta de forma local. Guarda la URL publica en ``CLOUDFLARE_URL``.
+    """
     global CLOUDFLARE_URL
     try:
         proc = subprocess.Popen(

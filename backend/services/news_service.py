@@ -1,6 +1,13 @@
+"""Servicio de noticias financieras via NewsAPI.
+
+Consulta el endpoint ``/everything`` (noticias de fuentes financieras por tema)
+y el endpoint ``/top-headlines`` (portadas por categoria/pais). Devuelve listas
+de articulos normalizados con titulo, descripcion, fuente, URL, imagen y fecha.
+"""
 import httpx
 from config import NEWS_API_BASE_URL, NEWS_API_KEY
 
+# Fuentes financieras reconocidas por NewsAPI usadas por defecto
 FUENTES_FINANCIERAS = {
     "bloomberg": "Bloomberg",
     "reuters": "Reuters",
@@ -19,6 +26,15 @@ async def obtener_noticias(
     fuentes: list | None = None,
     cantidad: int = 10,
 ):
+    """Busca noticias financieras en NewsAPI paginando hasta ``cantidad`` articulos.
+
+    Args:
+        query: terminos de busqueda.
+        fuentes: lista de fuentes; si es ``None`` se usan ``FUENTES_FINANCIERAS``.
+        cantidad: maximo de articulos a devolver.
+    Returns:
+        Lista de articulos normalizados o ``None`` si no hay clave o no hay resultados.
+    """
     if not NEWS_API_KEY:
         return None
 
@@ -82,6 +98,11 @@ async def obtener_noticias(
 
 
 async def obtener_portadas(categoria: str = "business", pais: str = "us", cantidad: int = 5):
+    """Obtiene las portadas (top headlines) de NewsAPI por categoria y pais.
+
+    Returns:
+        Lista de articulos normalizados o ``None`` si falla o no hay resultados.
+    """
     if not NEWS_API_KEY:
         return None
 

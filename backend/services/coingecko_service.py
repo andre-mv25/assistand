@@ -1,7 +1,18 @@
+"""Servicio de criptoactivos via CoinGecko.
+
+Provee el sentimiento general del mercado (cambio de capitalizacion, dominio de
+BTC) y las monedas mas buscadas (trending) de CoinGecko.
+"""
 import httpx
 from config import COINGECKO_BASE_URL
 
 async def obtener_sentimiento_mercado():
+    """Obtiene el sentimiento global del mercado de criptomonedas.
+
+    Returns:
+        ``{"sentimiento", "valor", "market_cap_change", "btc_dominance", "total_volume_usd"}``
+        o ``None`` si falla.
+    """
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.get(f"{COINGECKO_BASE_URL}/global")
         if resp.status_code != 200:
@@ -33,6 +44,7 @@ async def obtener_sentimiento_mercado():
 
 
 async def obtener_tendencias():
+    """Obtiene las 5 criptomonedas mas buscadas (trending) en CoinGecko."""
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.get(f"{COINGECKO_BASE_URL}/search/trending")
         if resp.status_code != 200:

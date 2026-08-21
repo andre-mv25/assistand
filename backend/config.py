@@ -1,15 +1,24 @@
+"""Configuracion central del backend.
+
+Carga las variables de entorno desde ``backend/.env`` (o directamente desde el
+entorno en produccion) y expone constantes de conexion a MongoDB, claves de API
+externas (DeepSeek, NewsAPI, Banxico, GNews) y parametros de la aplicacion.
+"""
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / ".env")
 
+# --- Base de datos ---
 MONGO_URI_LOCAL = os.getenv("MONGO_URI_LOCAL", "mongodb://localhost:27017")
 MONGO_URI_ATLAS = os.getenv("MONGO_URI_ATLAS", "")
 MONGO_DB = os.getenv("MONGO_DB", "trading_assistant")
 
+# URI efectiva: Atlas si esta definida, si no MongoDB local
 MONGO_URI = MONGO_URI_ATLAS or MONGO_URI_LOCAL
 
+# --- APIs externas ---
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
@@ -21,6 +30,8 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
 BANXICO_API_KEY = os.getenv("BANXICO_API_KEY", "")
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "")
 
+# --- Seguridad ---
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "")
 
+# --- Aplicacion ---
 INTERVALO_ACTUALIZACION = int(os.getenv("INTERVALO_ACTUALIZACION", "60"))

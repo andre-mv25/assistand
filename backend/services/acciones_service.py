@@ -1,3 +1,9 @@
+"""Servicio de acciones (S&P 500 y selectas latinas) via Yahoo Finance.
+
+Descarga precios historicos de ~250 tickers, calcula cambios, momentum a 60
+dias, volatilidad anual y RSI, y puntua cada accion (rendimiento por unidad de
+riesgo, penalizado por sobrecompra) para sugerir opciones de inversion.
+"""
 import asyncio
 import yfinance as yf
 
@@ -241,6 +247,7 @@ DIAS_HISTORICO = 90
 
 
 def _calcular_rsi(series, periodo=14):
+    """Calcula el indice de fuerza relativa (RSI) de una serie de precios."""
     if len(series) < periodo + 1:
         return None
     ganancias = sum(max(series[i] - series[i-1], 0) for i in range(-periodo, 0))
@@ -252,6 +259,13 @@ def _calcular_rsi(series, periodo=14):
 
 
 def _sincrono_obtener_acciones():
+    """Descarga precios de acciones, calcula metricas y devuelve ranking por score.
+
+    Returns:
+        Lista ordenada por ``score`` de dicts con ticker, empresa, precio,
+        cambio del dia, momentum 60d, volatilidad anual, RSI y score;
+        o ``None`` si la descarga falla.
+    """
     tickers = list(ACCIONES_CANDIDATAS.keys())
     try:
         data = yf.download(tickers, period=f"{DIAS_HISTORICO}d", interval="1d", progress=False, group_by="ticker")
@@ -305,4 +319,5 @@ def _sincrono_obtener_acciones():
 
 
 async def obtener_acciones():
+    """Devuelve el ranking de acciones puntuadas (envuelve la llamada bloqueante)."""
     return await asyncio.to_thread(_sincrono_obtener_acciones)
