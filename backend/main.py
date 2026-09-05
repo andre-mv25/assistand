@@ -115,12 +115,13 @@ async def get_precios():
     db = get_db()
     if db is not None:
         try:
-            await insert_dual("prices", {
-                "moneda": moneda,
-                "precio": data["precio"],
-                "cambio": data["cambio"],
-                "timestamp": datetime.utcnow(),
-            })
+            for moneda, data in monedas.items():
+                await insert_dual("prices", {
+                    "moneda": moneda,
+                    "precio": data["precio"],
+                    "cambio": data["cambio"],
+                    "timestamp": datetime.utcnow(),
+                })
         except Exception as e:
             print(f"Error DB insert: {e}")
     return {
