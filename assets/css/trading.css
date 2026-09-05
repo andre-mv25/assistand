@@ -1888,3 +1888,509 @@ table.comp-vs-tabla {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .comp-vs-nota strong { color: #ffffff; opacity: 1; }
+
+/* ============================================
+   CTA + FOOTER — sección cinematográfica con video
+   (adaptada de React+Tailwind a HTML/CSS)
+   ============================================ */
+.cta-section {
+    position: relative;
+    width: 100%;
+    margin-top: 1.75rem;
+    padding: 8rem 1.5rem;
+    text-align: center;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    border-radius: 18px;
+    font-family: 'Barlow', sans-serif;
+}
+
+.cta-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.cta-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+.cta-fade-top {
+    top: 0;
+    height: 200px;
+    background: linear-gradient(to bottom, #000, transparent);
+}
+.cta-fade-bottom {
+    bottom: 0;
+    height: 200px;
+    background: linear-gradient(to top, #000, transparent);
+}
+
+.cta-content {
+    position: relative;
+    z-index: 10;
+}
+
+.cta-heading {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 0.9;
+    font-size: 3rem;
+    max-width: 48rem;
+    margin: 0 auto 1rem;
+}
+.cta-subtext {
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 36rem;
+    margin: 0 auto 2rem;
+}
+
+.cta-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+.cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: 'Barlow', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+.cta-btn i {
+    font-size: 0.85rem;
+}
+
+/* Botón vidrio líquido */
+.liquid-glass-strong {
+    background: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    border: none;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+.liquid-glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.2) 20%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+.cta-btn-glass {
+    color: #fff;
+}
+.cta-btn-glass:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Botón sólido */
+.cta-btn-solid {
+    background: #fff;
+    color: #000;
+}
+.cta-btn-solid:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Footer */
+.cta-footer {
+    margin-top: 8rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.cta-copyright {
+    font-weight: 300;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+}
+.cta-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.cta-links a {
+    font-weight: 300;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.cta-links a:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive */
+@media (min-width: 736px) {
+    .cta-heading { font-size: 4rem; }
+    .cta-footer { flex-direction: row; }
+}
+@media (min-width: 1200px) {
+    .cta-section { padding: 9rem 4rem; }
+    .cta-heading { font-size: 5rem; }
+}
+
+/* ============================================================
+   RE-THEME GLOBAL — Cinemático liquid glass monocromo (blanco/negro)
+   Reemplaza el estilo anterior (verde glassmorphism) en toda la app.
+   Mantiene colores semánticos (verde/rojo/ámbar) SOLO en datos.
+   ============================================================ */
+
+/* ---------- Base ---------- */
+html {
+    font-size: 16pt;
+}
+body {
+    background: #000;
+}
+#bg {
+    background: #000;
+}
+#bg:before {
+    background-image: none;
+    background-color: transparent;
+}
+#bg:after {
+    background-image: none;
+}
+body, input, select, textarea, button {
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    color: #fff;
+}
+a {
+    border-bottom: none;
+}
+strong, b {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ---------- Tipografía ---------- */
+h1, h2 {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.05;
+    color: #fff;
+}
+h2.major {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Header ---------- */
+#header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 2.75rem;
+    line-height: 1;
+}
+#header .content p {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Liquid glass aplicado a bloques y tarjetas ---------- */
+.bloque,
+.auth-card {
+    background: rgba(255, 255, 255, 0.01);
+    border: none;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+}
+.bloque::before,
+.auth-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.2) 20%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+}
+.bloque::after,
+.auth-card::after {
+    display: none;
+}
+
+/* ---------- Auth: monocromo ---------- */
+.auth-blob {
+    opacity: 0.12;
+    filter: blur(90px);
+}
+.blob-1 { background: radial-gradient(circle, #ffffff 0%, transparent 70%); }
+.blob-2 { background: radial-gradient(circle, #9aa4b2 0%, transparent 70%); }
+.blob-3 { background: radial-gradient(circle, #5a6472 0%, transparent 70%); }
+
+.auth-logo {
+    background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.03) 70%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 34px rgba(255, 255, 255, 0.15), inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+.auth-logo .icon {
+    color: #fff;
+    text-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
+}
+.auth-card h2 {
+    background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.65));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.auth-subtitle {
+    color: rgba(255, 255, 255, 0.55);
+}
+.auth-btn {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 8px 26px rgba(255, 255, 255, 0.15);
+}
+.auth-btn:hover {
+    box-shadow: 0 12px 34px rgba(255, 255, 255, 0.25);
+}
+.auth-btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    box-shadow: none;
+}
+.auth-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+.auth-choice {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+}
+.auth-choice i:first-child {
+    color: #fff;
+}
+.auth-choice::before {
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+}
+.auth-choice:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 24px rgba(255, 255, 255, 0.1);
+}
+.auth-choice:hover .auth-choice-arrow {
+    color: #fff;
+}
+.auth-back:hover {
+    color: #fff;
+}
+.auth-input {
+    caret-color: #fff;
+}
+.auth-input:focus {
+    border-color: rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 0 24px rgba(255, 255, 255, 0.1);
+}
+.auth-toggle:hover {
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.terms-scroll h4 {
+    color: #fff;
+}
+.terms-accept input:checked + .terms-accept-box {
+    background: #fff;
+    border-color: #fff;
+    color: #000;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Menú de usuario ---------- */
+#header .user-bar .icon {
+    color: #fff;
+}
+.user-trigger {
+    background: rgba(0, 0, 0, 0.6);
+}
+.user-trigger:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+.user-menu {
+    background: rgba(0, 0, 0, 0.72);
+}
+.user-menu #btnSwitchUser:hover {
+    color: #fff;
+}
+.user-menu #btnLogout:hover {
+    color: #ff6b6b;
+}
+
+/* ---------- Botones de operación (theme .button) ---------- */
+.button {
+    border-radius: 9999px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 400;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+.button.primary {
+    background-color: #fff;
+    color: #000 !important;
+}
+
+/* ---------- Tarjetas / contenedores: vidrio ---------- */
+.grafico-container,
+.semaforo-container,
+.comp-card,
+.metric-card,
+.dash-card,
+.fuente-card,
+.opcion-card,
+.deepseek-card,
+.comp-explicador,
+.comp-comparador,
+.sim-progress {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.deepseek-card {
+    border-left: 4px solid rgba(255, 255, 255, 0.6);
+}
+.ai-simple {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- Detalles decorativos verde -> blanco ---------- */
+.sma-lista strong {
+    color: #fff;
+}
+.comp-explicador-titulo i {
+    color: #fff;
+}
+.comp-explicador-intro strong,
+.comp-explicador-resumen strong {
+    color: #fff;
+}
+.comp-exp-rango {
+    color: #fff;
+}
+.comp-diferencia {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.comp-diferencia strong,
+.comp-diferencia i {
+    color: #fff;
+}
+.comp-historial-item.actual {
+    background: rgba(255, 255, 255, 0.06);
+    border-left: 3px solid #fff;
+}
+.comp-vs-tabla th.comp-th-actual {
+    color: #fff;
+}
+.comp-vs-tabla th.comp-th-actual,
+.comp-vs-tabla td.comp-td-actual {
+    background: rgba(255, 255, 255, 0.07);
+}
+.panel-select,
+.panel-input {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+.panel-select option {
+    background: #000;
+    color: #fff;
+}
+.sim-progress-fill {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), #fff);
+}
+
+/* ---------- Keyframes monocromos (redefinidos) ---------- */
+@keyframes authLogoPulse {
+    0%, 100% {
+        box-shadow: 0 0 34px rgba(255, 255, 255, 0.15), inset 0 0 18px rgba(255, 255, 255, 0.08);
+    }
+    50% {
+        box-shadow: 0 0 52px rgba(255, 255, 255, 0.3), inset 0 0 24px rgba(255, 255, 255, 0.15);
+    }
+}
+@keyframes authFocusPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 0 24px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22), 0 0 32px rgba(255, 255, 255, 0.2);
+    }
+}

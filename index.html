@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>Trading Assistant</title>
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
-    <link rel="stylesheet" href="assets/css/trading.css?v=12">
+    <link rel="stylesheet" href="assets/css/trading.css?v=14">
 </head>
 <body>
 
@@ -558,9 +561,37 @@
 
         </div>
 
-        <!-- FOOTER -->
-        <footer id="footer">
-        </footer>
+        <!-- CTA + FOOTER -->
+        <section class="cta-section" aria-label="Llamado a la acción">
+            <video id="ctaVideo" class="cta-video" autoplay loop muted playsinline preload="metadata"></video>
+            <div class="cta-fade cta-fade-top"></div>
+            <div class="cta-fade cta-fade-bottom"></div>
+            <div class="cta-content">
+                <h2 class="cta-heading">Tu próxima operación empieza aquí.</h2>
+                <p class="cta-subtext">
+                    Simula inversiones en divisas y acciones con datos reales y análisis de IA.
+                    Sin riesgo, sin costos. Solo aprendizaje.
+                </p>
+                <div class="cta-buttons">
+                    <button type="button" id="ctaEmpezar" class="cta-btn cta-btn-glass liquid-glass-strong">
+                        <span>Empezar a simular</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" id="ctaPrecios" class="cta-btn cta-btn-solid">
+                        <span>Ver métricas</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                <footer class="cta-footer">
+                    <p class="cta-copyright">&copy; 2026 Trading Assistant. Todos los derechos reservados.</p>
+                    <div class="cta-links">
+                        <a href="#" id="linkPrivacy">Privacidad</a>
+                        <a href="#" id="linkTerms">Términos</a>
+                        <a href="#" id="linkContact">Contacto</a>
+                    </div>
+                </footer>
+            </div>
+        </section>
 
     </div>
 
@@ -2289,6 +2320,41 @@
             document.body.appendChild(notif);
             setTimeout(() => notif.remove(), 3000);
         }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+    <script>
+        (function () {
+            var video = document.getElementById('ctaVideo');
+            if (video) {
+                var src = 'https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8';
+                if (window.Hls && Hls.isSupported()) {
+                    var hls = new Hls();
+                    hls.loadSource(src);
+                    hls.attachMedia(video);
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = src;
+                }
+            }
+
+            function scrollToId(id) {
+                var el = document.getElementById(id);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            var btnEmpezar = document.getElementById('ctaEmpezar');
+            var btnMetricas = document.getElementById('ctaPrecios');
+            if (btnEmpezar) btnEmpezar.addEventListener('click', function () { scrollToId('dashboard'); });
+            if (btnMetricas) btnMetricas.addEventListener('click', function () { scrollToId('metricas'); });
+
+            var linkTerms = document.getElementById('linkTerms');
+            if (linkTerms) {
+                linkTerms.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var btn = document.getElementById('btnShowTerms');
+                    if (btn) btn.click();
+                });
+            }
+        })();
     </script>
 
 </body>
