@@ -4,6 +4,7 @@ Gestiona la conexion a la base de datos con respaldo automatico: intenta
 conectarse primero a MongoDB Atlas (nube) y, si falla, cae a MongoDB local.
 Tambien expone operaciones genericas de lectura/escritura para las colecciones.
 """
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
 from config import MONGO_URI_ATLAS, MONGO_URI_LOCAL, MONGO_DB
 
@@ -26,7 +27,10 @@ async def connect_db():
     uris = list(dict.fromkeys(uri for uri in uris if uri))
     for uri in uris:
         try:
-            c = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=5000)
+            kwargs = {"serverSelectionTimeoutMS": 5000}
+            if uri.startswith("mongodb+srv://"):
+                kwargs["tlsCAFile"] = certifi.where()
+            c = AsyncIOMotorClient(uri, **kwargs)
             await c.admin.command("ping")
             client = c
             db = client[MONGO_DB]

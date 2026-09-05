@@ -34,7 +34,8 @@ async def obtener_tipo_cambio(moneda: str = "USD", fecha: str | None = None) -> 
         return None
 
     hoy = fecha or datetime.now().strftime("%Y-%m-%d")
-    url = f"{BANXICO_BASE_URL}/series/{serie}/datos/{hoy}/{hoy}"
+    rango = f"{hoy}/{hoy}" if fecha else "oportuno"
+    url = f"{BANXICO_BASE_URL}/series/{serie}/datos/{rango}"
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:

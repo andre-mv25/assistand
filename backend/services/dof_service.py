@@ -18,7 +18,7 @@ async def obtener_tipo_cambio_dolar() -> dict | None:
         o ``None`` si la pagina no responde o no se encuentra el valor.
     """
     try:
-        async with httpx.AsyncClient(timeout=15, verify=False) as client:
+        async with httpx.AsyncClient(timeout=15, verify=False, follow_redirects=True) as client:
             resp = await client.get(DOF_URL)
             if resp.status_code != 200:
                 return None
@@ -30,7 +30,7 @@ async def obtener_tipo_cambio_dolar() -> dict | None:
     fecha_match = re.search(r"Tipo de Cambio y Tasas al\s*(\d{2}/\d{2}/\d{4})", texto)
     fecha = fecha_match.group(1) if fecha_match else datetime.now().strftime("%d/%m/%Y")
 
-    valor_match = re.search(r"DOLAR\s*(?:</?\w+[^>]*>)*\s*([\d.]+)", texto)
+    valor_match = re.search(r"DOLAR</span>\s*(?:</?\w+[^>]*>\s*)*([\d.]+)", texto)
     if not valor_match:
         return None
 
