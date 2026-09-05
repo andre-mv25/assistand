@@ -12,35 +12,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
-    <link rel="stylesheet" href="assets/css/trading.css?v=14">
+    <link rel="stylesheet" href="assets/css/trading.css?v=18">
 </head>
 <body>
 
     <!-- PANTALLA DE AUTENTICACIÓN -->
     <div id="authScreen">
-        <div class="auth-bg">
-            <div class="auth-blob blob-1"></div>
-            <div class="auth-blob blob-2"></div>
-            <div class="auth-blob blob-3"></div>
-        </div>
-        <div class="auth-card">
+        <video id="authVideo" class="cta-video" autoplay loop muted playsinline preload="metadata"></video>
+        <div class="cta-fade cta-fade-top"></div>
+        <div class="cta-fade cta-fade-bottom"></div>
+        <div class="auth-content">
             <div class="auth-logo">
                 <span class="icon solid fa-chart-line"></span>
             </div>
-            <h2>Trading Assistant</h2>
+            <h1 class="auth-title">Trading Assistant</h1>
             <p class="auth-subtitle">Plataforma de análisis financiero</p>
 
-            <!-- VISTA INICIAL: solo dos botones -->
+            <!-- VISTA INICIAL: dos botones lado a lado -->
             <div id="authWelcome" class="auth-welcome">
                 <button type="button" id="btnShowLogin" class="auth-choice">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Iniciar Sesión</span>
-                    <i class="fas fa-chevron-right auth-choice-arrow"></i>
                 </button>
                 <button type="button" id="btnShowRegister" class="auth-choice">
                     <i class="fas fa-user-plus"></i>
                     <span>Registrarse</span>
-                    <i class="fas fa-chevron-right auth-choice-arrow"></i>
                 </button>
             </div>
 
@@ -88,28 +84,25 @@
         </div>
     </div>
 
-    <!-- PANTALLA DE BIENVENIDA -->
+    <!-- PANTALLA DE BIENVENIDA (cinemática) -->
     <div id="welcomeScreen" style="display: none;">
-        <div class="auth-bg">
-            <div class="auth-blob blob-1"></div>
-            <div class="auth-blob blob-2"></div>
-            <div class="auth-blob blob-3"></div>
-        </div>
-        <div class="auth-card welcome-card">
-            <div class="auth-logo">
-                <span class="icon solid fa-chart-line"></span>
-            </div>
-            <h2 id="welcomeTitle">Bienvenido</h2>
-            <p class="welcome-text" id="welcomeTexto" style="display: none;">
+        <video id="ctaVideo" class="cta-video" autoplay loop muted playsinline preload="metadata"></video>
+        <div class="cta-fade cta-fade-top"></div>
+        <div class="cta-fade cta-fade-bottom"></div>
+        <div class="cta-content">
+            <h2 class="cta-heading" id="welcomeTitle">Tu próxima operación empieza aquí.</h2>
+            <p class="cta-subtext" id="welcomeTexto">
                 Trading Assistant es tu centro de operaciones financieras. Simula inversiones en divisas y
                 acciones, sigue los precios en tiempo real y recibe un análisis automático
                 basado en noticias y una inteligencia artificial que te dice dónde conviene invertir y con
                 qué margen de ganancia. Aprende a operar sin arriesgar tu dinero.
             </p>
-            <button type="button" id="btnSiguiente" class="auth-btn">
-                <span>Siguiente</span>
-                <i class="fas fa-arrow-right"></i>
-            </button>
+            <div class="cta-buttons">
+                <button type="button" id="btnEmpezar" class="cta-btn cta-btn-dark">
+                    <span>Empezar a simular</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -561,38 +554,6 @@
 
         </div>
 
-        <!-- CTA + FOOTER -->
-        <section class="cta-section" aria-label="Llamado a la acción">
-            <video id="ctaVideo" class="cta-video" autoplay loop muted playsinline preload="metadata"></video>
-            <div class="cta-fade cta-fade-top"></div>
-            <div class="cta-fade cta-fade-bottom"></div>
-            <div class="cta-content">
-                <h2 class="cta-heading">Tu próxima operación empieza aquí.</h2>
-                <p class="cta-subtext">
-                    Simula inversiones en divisas y acciones con datos reales y análisis de IA.
-                    Sin riesgo, sin costos. Solo aprendizaje.
-                </p>
-                <div class="cta-buttons">
-                    <button type="button" id="ctaEmpezar" class="cta-btn cta-btn-glass liquid-glass-strong">
-                        <span>Empezar a simular</span>
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button type="button" id="ctaPrecios" class="cta-btn cta-btn-solid">
-                        <span>Ver métricas</span>
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-                <footer class="cta-footer">
-                    <p class="cta-copyright">&copy; 2026 Trading Assistant. Todos los derechos reservados.</p>
-                    <div class="cta-links">
-                        <a href="#" id="linkPrivacy">Privacidad</a>
-                        <a href="#" id="linkTerms">Términos</a>
-                        <a href="#" id="linkContact">Contacto</a>
-                    </div>
-                </footer>
-            </div>
-        </section>
-
     </div>
 
     <div id="bg"></div>
@@ -926,7 +887,7 @@
                 if (e.persisted) verificarSesion();
             });
 
-            document.getElementById('btnSiguiente').addEventListener('click', comenzarOperaciones);
+            document.getElementById('btnEmpezar').addEventListener('click', comenzarOperaciones);
         }
 
         function iniciarApp(username, esNuevo) {
@@ -937,14 +898,19 @@
         }
 
         function mostrarBienvenida(username, esNuevo) {
-            const welcomeScreen = document.getElementById('welcomeScreen');
             const titulo = document.getElementById('welcomeTitle');
             const texto = document.getElementById('welcomeTexto');
-            titulo.textContent = esNuevo ? `Bienvenido, ${username}!` : `Bienvenido de nuevo, ${username}`;
-            texto.style.display = esNuevo ? 'block' : 'none';
-            welcomeScreen.style.display = 'flex';
+            if (esNuevo) {
+                titulo.textContent = 'Tu próxima operación empieza aquí.';
+                texto.textContent = 'Trading Assistant es tu centro de operaciones financieras. Simula inversiones en divisas y acciones, sigue los precios en tiempo real y recibe un análisis automático basado en noticias y una inteligencia artificial que te dice dónde conviene invertir y con qué margen de ganancia. Aprende a operar sin arriesgar tu dinero.';
+                texto.style.display = 'block';
+            } else {
+                titulo.textContent = `Bienvenido, ${username}`;
+                texto.style.display = 'none';
+            }
+            document.getElementById('welcomeScreen').style.display = 'flex';
             document.body.classList.add('auth-locked');
-            document.getElementById('btnSiguiente').focus();
+            document.getElementById('btnEmpezar').focus();
         }
 
         function comenzarOperaciones() {
@@ -1264,6 +1230,11 @@
             document.getElementById('authScreen').style.display = 'flex';
             document.body.classList.add('auth-locked');
             document.getElementById('userBar').style.display = 'none';
+            document.getElementById('authWelcome').style.display = 'flex';
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('authError').textContent = '';
+            document.getElementById('regError').textContent = '';
         }
 
         async function verificarSesion() {
@@ -2325,9 +2296,9 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
     <script>
         (function () {
-            var video = document.getElementById('ctaVideo');
-            if (video) {
-                var src = 'https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8';
+            var src = 'https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8';
+            var videos = document.querySelectorAll('.cta-video');
+            videos.forEach(function (video) {
                 if (window.Hls && Hls.isSupported()) {
                     var hls = new Hls();
                     hls.loadSource(src);
@@ -2335,25 +2306,7 @@
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = src;
                 }
-            }
-
-            function scrollToId(id) {
-                var el = document.getElementById(id);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-            var btnEmpezar = document.getElementById('ctaEmpezar');
-            var btnMetricas = document.getElementById('ctaPrecios');
-            if (btnEmpezar) btnEmpezar.addEventListener('click', function () { scrollToId('dashboard'); });
-            if (btnMetricas) btnMetricas.addEventListener('click', function () { scrollToId('metricas'); });
-
-            var linkTerms = document.getElementById('linkTerms');
-            if (linkTerms) {
-                linkTerms.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    var btn = document.getElementById('btnShowTerms');
-                    if (btn) btn.click();
-                });
-            }
+            });
         })();
     </script>
 

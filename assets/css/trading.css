@@ -2394,3 +2394,113 @@ h2.major {
         box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22), 0 0 32px rgba(255, 255, 255, 0.2);
     }
 }
+
+/* ---------- Pantalla de bienvenida cinemática ---------- */
+#welcomeScreen {
+    background: #000;
+}
+#welcomeScreen .cta-content {
+    width: 100%;
+    padding: 2.5rem 1.5rem;
+}
+
+/* ---------- Botones de login/registro: fondo neutro para mejor contraste ---------- */
+.auth-choice {
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.auth-choice i:first-child {
+    color: #fff;
+}
+.auth-choice:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Botón "Empezar a simular": mismo contraste neutro ---------- */
+.cta-btn-dark {
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-weight: 600;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.cta-btn-dark:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Botones de formularios (Entrar / Crear cuenta / Aceptar) ---------- */
+.auth-btn {
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-weight: 600;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: none;
+}
+.auth-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.auth-btn-ghost {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    box-shadow: none;
+}
+.auth-btn-ghost:hover {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: none;
+}
+
+/* ---------- Pantalla de login cinemática (sin recuadro) ---------- */
+#authScreen {
+    background: #000;
+}
+.auth-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 32rem;
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    text-align: center;
+}
+.auth-title {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: #fff;
+    margin: 0;
+}
+.auth-subtitle {
+    margin-bottom: 0.5rem;
+}
+.auth-welcome {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.auth-welcome .auth-choice {
+    width: auto;
+    padding: 0.8rem 1.5rem;
+}
+.auth-form {
+    width: 100%;
+}
