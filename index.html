@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
-    <link rel="stylesheet" href="assets/css/trading.css?v=11">
+    <link rel="stylesheet" href="assets/css/trading.css?v=12">
 </head>
 <body>
 
@@ -110,6 +110,87 @@
         </div>
     </div>
 
+    <!-- PANTALLA DE TÉRMINOS Y CONDICIONES -->
+    <div id="termsScreen" style="display: none;">
+        <div class="auth-bg">
+            <div class="auth-blob blob-1"></div>
+            <div class="auth-blob blob-2"></div>
+            <div class="auth-blob blob-3"></div>
+        </div>
+        <div class="auth-card terms-card">
+            <div class="auth-logo">
+                <span class="icon solid fa-file-alt"></span>
+            </div>
+            <h2>Términos y Condiciones</h2>
+            <p class="auth-subtitle" id="termsSubtitle">Debes aceptarlos para crear tu cuenta</p>
+
+            <div class="terms-scroll">
+                <p><strong>Al registrarte, acceder o utilizar la plataforma Trading Assistant, aceptas los presentes Términos y Condiciones.</strong> Si no estás de acuerdo con alguno de ellos, deberás abstenerte de utilizar la Aplicación.</p>
+
+                <h4>1. Naturaleza educativa y de simulación</h4>
+                <p>Trading Assistant es una herramienta de carácter exclusivamente educativo y de simulación financiera. Permite simular inversiones en divisas, acciones y criptomonedas utilizando dinero virtual y datos públicos del mercado. La Aplicación NO realiza operaciones reales, no administra fondos, no ejecuta órdenes de compra o venta y no constituye una asesoría de inversión, bursátil, fiscal, legal o de cualquier otra índole.</p>
+
+                <h4>2. Información y fuentes de datos</h4>
+                <p>Los precios, noticias, análisis de sentimiento, pronósticos estadísticos, veredictos de inteligencia artificial y demás información mostrada provienen de fuentes públicas y modelos automatizados que pueden contener errores, omisiones o retrasos. Dicha información no debe interpretarse como recomendación para comprar o vender instrumento alguno. El uso de la Aplicación es bajo tu propio riesgo y responsabilidad. Trading Assistant y sus desarrolladores no se hacen responsables de ninguna pérdida o perjuicio derivado de decisiones tomadas con base en la información generada.</p>
+
+                <h4>3. Requisitos de edad y capacidad legal</h4>
+                <p>La Aplicación está dirigida a mayores de edad o a personas con capacidad legal para aceptar estos Términos. Los menores de edad deberán contar con la autorización y supervisión de un padre, madre o tutor legal. En caso de registrarse un menor sin dicha autorización, el responsable del menor será el titular de la patria potestad o tutela.</p>
+
+                <h4>4. Cuenta de usuario</h4>
+                <p>Para utilizar ciertas funciones deberás crear una cuenta proporcionando un nombre de usuario y una contraseña que cumpla con la política de seguridad de la Aplicación. Eres responsable de mantener la confidencialidad de tu contraseña y de todas las actividades realizadas con tu cuenta. Deberás notificarnos de inmediato cualquier uso no autorizado. No compartas tus credenciales con terceros.</p>
+
+                <h4>5. Datos que recopilamos</h4>
+                <p>Recopilamos únicamente los datos necesarios para el funcionamiento del servicio: nombre de usuario, contraseña (almacenada de forma cifrada), historial de simulaciones, análisis generados y preferencias de uso. Tus datos se utilizan exclusivamente para identificar tu cuenta, guardar tu historial, mostrarte estadísticas personales y mejorar la Aplicación. No vendemos ni compartimos tus datos personales con terceros con fines comerciales o publicitarios.</p>
+
+                <h4>6. Protección de datos y seguridad</h4>
+                <p>Tus contraseñas se almacenan cifradas y el acceso a la Aplicación se protege mediante tokens de sesión con caducidad. Los datos sensibles se cifran de forma selectiva. Sin embargo, ninguna transmisión de datos por internet es completamente segura, por lo que no podemos garantizar una seguridad absoluta. Eres responsable de proteger el dispositivo desde el cual accedes.</p>
+
+                <h4>7. Obligaciones del usuario</h4>
+                <p>Te comprometes a utilizar la Aplicación únicamente con fines educativos y personales, y a no: (i) intentar acceder a cuentas de otros usuarios o a datos ajenos; (ii) interferir con el funcionamiento de la Aplicación o sus servidores; (iii) utilizar la información para prestar servicios comerciales sin autorización; (iv) reproducir, distribuir o explotar comercialmente la Aplicación o sus contenidos; ni (v) realizar cualquier actividad ilícita o contraria a la ley.</p>
+
+                <h4>8. Proveedores externos</h4>
+                <p>La Aplicación consulta datos de terceros como Yahoo Finance, Banxico, DOF, NewsAPI, GNews, Google News, CoinGecko, Frankfurter y servicios de inteligencia artificial. Estos proveedores son independientes y ajenos a nuestro control. No garantizamos la disponibilidad, exactitud ni puntualidad de dicha información, y no seremos responsables por interrupciones o fallas de dichos servicios.</p>
+
+                <h4>9. Exclusión de garantías y responsabilidad</h4>
+                <p>La Aplicación se proporciona "tal cual" y "según disponibilidad", sin garantías de ningún tipo, expresas o implícitas. En la máxima medida permitida por la ley, Trading Assistant y sus desarrolladores no serán responsables por daños directos, indirectos, incidentales o consecuentes derivados del uso o la imposibilidad de uso de la Aplicación, incluyendo pérdidas económicas fuera de la simulación.</p>
+
+                <h4>10. Modificaciones de los Términos</h4>
+                <p>Podemos actualizar o modificar estos Términos en cualquier momento. Los cambios entrarán en vigor al momento de su publicación en la Aplicación. Si continúas utilizando la Aplicación después de la publicación de los cambios, se entenderá que aceptas las nuevas condiciones.</p>
+
+                <h4>11. Suspensión y cancelación de la cuenta</h4>
+                <p>Podemos suspender o cancelar tu cuenta si incumples estos Términos o si así lo consideramos necesario para proteger la seguridad e integridad del servicio. Al terminar tu cuenta, tus datos personales podrán ser eliminados conforme a nuestra política de tratamiento de datos.</p>
+
+                <h4>12. Ley aplicable y jurisdicción</h4>
+                <p>Estos Términos se rigen por las leyes de los Estados Unidos Mexicanos. Para cualquier controversia derivada del uso de la Aplicación, las partes se someten a los tribunales competentes de la Ciudad de México, renunciando a cualquier otro fuero que pudiera corresponderles.</p>
+
+                <h4>13. Contacto</h4>
+                <p>Si tienes dudas sobre estos Términos y Condiciones, puedes contactarnos a través de los medios de contacto habilitados en la Aplicación.</p>
+
+                <p>Al marcar la casilla "He leído y acepto los términos y condiciones y la política de privacidad" y crear tu cuenta, confirmas que has leído, entendido y aceptado íntegramente los presentes Términos y Condiciones.</p>
+            </div>
+
+            <label class="terms-accept" for="termsCheck">
+                <input type="checkbox" id="termsCheck">
+                <span class="terms-accept-box"><i class="fas fa-check"></i></span>
+                <span class="terms-accept-text">He leído y acepto los términos y condiciones y la política de privacidad</span>
+            </label>
+            <div class="auth-error" id="termsError"></div>
+
+            <button type="button" id="btnTermsAceptar" class="auth-btn" disabled>
+                <span>Aceptar y registrarme</span>
+                <i class="fas fa-check"></i>
+            </button>
+            <button type="button" id="btnTermsCancelar" class="auth-btn auth-btn-ghost">
+                <span>No acepto, volver</span>
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <button type="button" id="btnTermsClose" class="auth-btn auth-btn-ghost" style="display: none;">
+                <span>Cerrar</span>
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <div id="wrapper">
 
         <!-- HEADER -->
@@ -130,6 +211,9 @@
                     <i class="fas fa-chevron-down user-caret"></i>
                 </button>
                 <div class="user-menu" id="userMenu" style="display: none;">
+                    <button type="button" id="btnShowTerms">
+                        <i class="fas fa-file-contract"></i> Términos y condiciones
+                    </button>
                     <button type="button" id="btnSwitchUser">
                         <i class="fas fa-exchange-alt"></i> Cambiar de usuario
                     </button>
@@ -641,7 +725,7 @@
                 }
             });
 
-            registerForm.addEventListener('submit', async (e) => {
+            registerForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const username = document.getElementById('regUsername').value.trim();
                 const password = document.getElementById('regPassword').value;
@@ -655,21 +739,91 @@
                     errorEl.textContent = 'La contraseña debe tener mínimo 8 caracteres, con al menos una mayúscula, un número y un carácter especial';
                     return;
                 }
+                registroPendiente = { username, password };
+                mostrarTerminos('registro');
+            });
+
+            // ===== TÉRMINOS Y CONDICIONES =====
+            let registroPendiente = null;
+            let terminosModo = 'registro'; // 'registro' | 'vista'
+            const termsScreen = document.getElementById('termsScreen');
+            const termsCheck = document.getElementById('termsCheck');
+            const termsError = document.getElementById('termsError');
+            const termsAcceptWrap = termsCheck.closest('.terms-accept');
+            const btnTermsAceptar = document.getElementById('btnTermsAceptar');
+            const btnTermsCancelar = document.getElementById('btnTermsCancelar');
+            const btnTermsClose = document.getElementById('btnTermsClose');
+            const termsSubtitle = document.getElementById('termsSubtitle');
+
+            function mostrarTerminos(modo) {
+                const vista = modo === 'vista';
+                terminosModo = vista ? 'vista' : 'registro';
+                registerForm.style.display = 'none';
+                authScreen.style.display = 'none';
+                termsScreen.style.display = 'flex';
+                termsCheck.checked = false;
+                termsError.textContent = '';
+                termsSubtitle.textContent = vista ? 'Información legal y de privacidad' : 'Debes aceptarlos para crear tu cuenta';
+                termsAcceptWrap.style.display = vista ? 'none' : 'flex';
+                btnTermsAceptar.style.display = vista ? 'none' : 'flex';
+                btnTermsCancelar.style.display = vista ? 'none' : 'flex';
+                btnTermsClose.style.display = vista ? 'flex' : 'none';
+                document.body.classList.add('auth-locked');
+                if (!vista) btnTermsAceptar.disabled = true;
+            }
+
+            function volverLogin() {
+                termsScreen.style.display = 'none';
+                authScreen.style.display = 'flex';
+                welcome.style.display = 'none';
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'flex';
+                registerError.textContent = '';
+            }
+
+            function cerrarTerminosVista() {
+                termsScreen.style.display = 'none';
+                document.body.classList.remove('auth-locked');
+            }
+
+            termsCheck.addEventListener('change', () => {
+                btnTermsAceptar.disabled = !termsCheck.checked;
+                termsError.textContent = '';
+            });
+
+            btnTermsCancelar.addEventListener('click', () => {
+                registroPendiente = null;
+                volverLogin();
+            });
+
+            btnTermsClose.addEventListener('click', cerrarTerminosVista);
+
+            btnTermsAceptar.addEventListener('click', async () => {
+                if (!termsCheck.checked) {
+                    termsError.textContent = 'Debes aceptar los términos y condiciones para continuar';
+                    return;
+                }
+                if (!registroPendiente) return;
+                btnTermsAceptar.disabled = true;
                 try {
                     const resp = await fetch(`${API_BASE}/api/auth/register`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password }),
+                        body: JSON.stringify(registroPendiente),
                     });
                     const data = await resp.json();
                     if (data.success) {
                         setToken(data.token);
+                        termsScreen.style.display = 'none';
+                        registroPendiente = null;
                         iniciarApp(data.username, true);
                     } else {
-                        errorEl.textContent = data.error || 'Error al registrar';
+                        termsError.textContent = data.error || 'Error al registrar';
+                        btnTermsAceptar.disabled = false;
                     }
                 } catch (err) {
-                    errorEl.textContent = 'No se pudo conectar con el servidor';
+                    termsError.textContent = 'No se pudo conectar con el servidor';
+                    btnTermsAceptar.disabled = false;
                 }
             });
 
@@ -719,6 +873,12 @@
             document.getElementById('btnSwitchUser').addEventListener('click', (e) => {
                 e.preventDefault();
                 cerrarSesionCompleta();
+            });
+
+            document.getElementById('btnShowTerms').addEventListener('click', (e) => {
+                e.preventDefault();
+                cerrarMenuUsuario();
+                mostrarTerminos('vista');
             });
 
             // Terminar sesión al cerrar la página (pestaña/ventana/recarga)
