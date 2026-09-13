@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Trading Assistant — Arquitectura de ejecución",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "camino-principal", "label": "Ruta principal", "focus": ["frontend", "backend", "db"], "note": "Sigue la solicitud desde la SPA hasta el almacenamiento durable." },
+      { "id": "datos-mercado", "label": "Datos de mercado", "focus": ["backend", "yahoo", "banxico", "frankfurter", "coingecko"], "note": "Proveedores de cotizaciones, tipo de cambio y cripto." },
+      { "id": "ia-noticias", "label": "IA y noticias", "focus": ["backend", "news", "deepseek"], "note": "Análisis de sentimiento y veredicto de IA." }
+    ]
+  },
+  "components": [
+    { "id": "frontend", "type": "frontend", "label": "Frontend SPA", "sublabel": "HTML · CSS · JS · Chart.js", "pos": [40, 300], "size": [140, 64] },
+    { "id": "backend", "type": "backend", "label": "API FastAPI", "sublabel": "Python 3.13 · async", "pos": [360, 300], "size": [150, 70] },
+    { "id": "db", "type": "database", "label": "MongoDB Atlas", "sublabel": "Motor async", "pos": [680, 300], "size": [140, 64] },
+    { "id": "yahoo", "type": "external", "label": "Yahoo Finance", "sublabel": "yfinance", "pos": [150, 60], "size": [130, 60] },
+    { "id": "news", "type": "external", "label": "Noticias", "sublabel": "NewsAPI · GNews · Google", "pos": [320, 60], "size": [130, 60] },
+    { "id": "deepseek", "type": "external", "label": "DeepSeek AI", "sublabel": "veredicto + sentimiento", "pos": [490, 60], "size": [130, 60] },
+    { "id": "banxico", "type": "external", "label": "Banxico + DOF", "sublabel": "tipo de cambio FIX", "pos": [150, 540], "size": [130, 60] },
+    { "id": "coingecko", "type": "external", "label": "CoinGecko", "sublabel": "cripto", "pos": [320, 540], "size": [130, 60] },
+    { "id": "frankfurter", "type": "external", "label": "Frankfurter", "sublabel": "forex alterno", "pos": [490, 540], "size": [130, 60] }
+  ],
+  "connections": [
+    { "id": "frontend-to-backend", "from": "frontend", "to": "backend", "label": "HTTP / JSON (REST)", "variant": "emphasis" },
+    { "id": "backend-to-db", "from": "backend", "to": "db", "label": "MongoDB · Motor async" },
+    { "id": "backend-to-yahoo", "from": "backend", "to": "yahoo", "label": "cotizaciones", "fromSide": "top", "toSide": "bottom" },
+    { "id": "backend-to-news", "from": "backend", "to": "news", "label": "noticias", "fromSide": "top", "toSide": "bottom" },
+    { "id": "backend-to-deepseek", "from": "backend", "to": "deepseek", "label": "veredicto de IA", "fromSide": "top", "toSide": "bottom" },
+    { "id": "backend-to-banxico", "from": "backend", "to": "banxico", "label": "tipo de cambio", "fromSide": "bottom", "toSide": "top", "labelDx": -70 },
+    { "id": "backend-to-coingecko", "from": "backend", "to": "coingecko", "label": "cripto", "fromSide": "bottom", "toSide": "top", "labelDx": 70 },
+    { "id": "backend-to-frankfurter", "from": "backend", "to": "frankfurter", "label": "forex", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Frontend", "items": ["SPA en español: index.html + Chart.js", "Consume la API REST con fetch()"] },
+    { "dot": "emerald", "title": "Backend", "items": ["FastAPI async en Python 3.13", "VADER + ARIMA/ARMA internos", "Semáforo combinado 60% noticias/IA + 40% estadística"] },
+    { "dot": "rose", "title": "Seguridad y datos", "items": ["Fernet (AES-128-CBC) cifra montos y análisis", "SHA-256 + salt para contraseñas", "Atlas en nube con respaldo local"] }
+  ]
+}

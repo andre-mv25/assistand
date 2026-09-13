@@ -37,7 +37,7 @@ URL de producción: https://assistand.onrender.com
                      Yahoo Finance · Banxico · DOF · NewsAPI · GNews · DeepSeek · CoinGecko
 ```
 
-- **Frontend:** `index.html` (SPA en español) + `assets/css/trading.css` + Chart.js.
+- **Frontend:** `index.html` (SPA en español) + `assets/css/trading.css` + `assets/js/trading.js` + Chart.js.
 - **Backend:** API REST con FastAPI (async) en `backend/`, base de datos MongoDB con Motor.
 - **Despliegue:** Render (producción) con MongoDB Atlas; respaldo local en desarrollo.
 
@@ -47,14 +47,22 @@ URL de producción: https://assistand.onrender.com
 
 ```
 html5up-dimension/
-├── index.html                 # Frontend SPA (todo el JS de la interfaz)
+├── index.html                 # Frontend SPA (estructura HTML + refs a JS/CSS)
 ├── assets/
 │   ├── css/
 │   │   ├── main.css           # Plantilla base (html5up Dimension)
 │   │   └── trading.css        # Estilos propios de Trading Assistant
+│   ├── js/
+│   │   ├── trading.js         # Lógica SPA: auth, simulación, gráfica, semáforo
+│   │   └── cta-video.js       # Reproductor de vídeo HLS para el bloque CTA
 │   └── images/
 ├── backend/
-│   ├── main.py                # API FastAPI: endpoints + lógica de negocio
+│   ├── main.py                # API FastAPI: app, lifecycle, CORS y montaje
+│   ├── routers/               # Endpoints modulares (routers de FastAPI)
+│   │   ├── auth.py            # Registro/login, tokens y sesiones
+│   │   ├── simulaciones.py    # Historial cifrado de simulaciones por usuario
+│   │   ├── mercado.py         # Precios Forex, noticias, VADER, Banxico/DOF
+│   │   └── analisis.py        # Pronóstico ARIMA/ARMA y análisis DeepSeek
 │   ├── database.py            # Conexión a MongoDB (Atlas con respaldo local)
 │   ├── security.py            # Cifrado Fernet y hashes (SHA-256)
 │   ├── config.py              # Variables de entorno y claves de API
