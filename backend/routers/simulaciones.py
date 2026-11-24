@@ -11,7 +11,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from database import get_db, insert_dual, delete_dual
+from database import get_db, insert_dual, delete_dual, find_many
 from security import encrypt_text, decrypt_text, encrypt_num, decrypt_num, hash_key
 from routers.auth import validar_token
 
@@ -98,9 +98,14 @@ async def listar_simulaciones(token: str = Query("")):
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
     try:
-        cursor = db.simulaciones.find({"username_hash": hash_key(sesion["username"])}).sort("fecha", -1).limit(50)
+        docs = await find_many(
+            "simulaciones",
+            {"username_hash": hash_key(sesion["username"])},
+            sort=[("fecha", -1)],
+            limit=50,
+        )
         simulaciones = []
-        async for doc in cursor:
+        for doc in docs:
             doc["_id"] = str(doc["_id"])
             doc["username"] = doc.get("username") or decrypt_text(doc.get("username_enc"))
             for campo in SIMULACION_CAMPOS_TEXTO:

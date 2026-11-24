@@ -10,10 +10,14 @@ from fastapi.responses import JSONResponse
 
 from database import get_db, insert_dual
 from services.yfinance_service import (
-    obtener_precios_forex,
-    obtener_historico_forex,
-    obtener_precio_par,
-    obtener_historico_par,
+    obtener_precios_forex as yf_precios_forex,
+    obtener_historico_forex as yf_historico_forex,
+    obtener_precio_par as yf_precio_par,
+    obtener_historico_par as yf_historico_par,
+)
+from services.forex_service import (
+    obtener_precios_forex as fx_precios_forex,
+    obtener_historico_forex as fx_historico_forex,
 )
 from services.coingecko_service import obtener_tendencias
 from services.news_service import obtener_noticias, obtener_portadas
@@ -27,7 +31,9 @@ router = APIRouter(prefix="/api", tags=["Mercado"])
 @router.get("/precios")
 async def get_precios():
     """Obtiene las cotizaciones Forex actuales de todas las monedas soportadas."""
-    monedas = await obtener_precios_forex()
+    monedas = await yf_precios_forex()
+    if monedas is None:
+        monedas = await fx_precios_forex()
     if monedas is None:
         return JSONResponse(content={"error": "No se pudieron obtener precios Forex"}, status_code=503)
     db = get_db()
@@ -55,7 +61,9 @@ async def get_precio_moneda(moneda: str):
     Args:
         moneda: codigo (USD, MXN, JPY, EUR).
     """
-    monedas = await obtener_precios_forex()
+    monedas = await yf_precios_forex()
+    if monedas is None:
+        monedas = await fx_precios_forex()
     if monedas is None:
         return JSONResponse(content={"error": "No se pudieron obtener precios Forex"}, status_code=503)
     data = monedas.get(moneda.upper())
@@ -72,7 +80,7 @@ async def get_precio_moneda(moneda: str):
 @router.get("/par/{from_curr}/{to_curr}")
 async def get_par(from_curr: str, to_curr: str):
     """Obtiene la tasa de cambio actual del par FROM/TO (ej. USD/MXN)."""
-    par = await obtener_precio_par(from_curr.upper(), to_curr.upper())
+    par = await yf_precio_par(from_curr.upper(), to_curr.upper())
     if par is None:
         return JSONResponse(content={"error": "No se pudo obtener el par"}, status_code=503)
     return par
@@ -87,7 +95,17 @@ async def get_historico_par(from_curr: str, to_curr: str, dias: int = Query(60))
     Returns:
         ``{"from", "to", "datos": [...], "timestamp"}``.
     """
-    historico = await obtener_historico_par(from_curr.upper(), to_curr.upper(), dias)
+    historico = await yf_historico_par(from_curr.upper(), to_curr.upper(), dias)
+    if historico is None:
+        # Fallback a Frankfurter si yfinance falla
+        fx_hist = await fx_historico_forex(to_curr.upper(), dias)
+        if fx_hist:
+            if from_curr.upper() == "USD":
+                historico = fx_hist
+            else:
+                historico = None
+        else:
+            historico = None
     if historico is None:
         return JSONResponse(content={"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, status_code=503)
     return {
@@ -106,7 +124,9 @@ async def get_historico(moneda: str, dias: int = Query(30)):
         moneda: codigo de la divisa (JPY, EUR, MXN...).
         dias: cantidad de dias del historico (default 30).
     """
-    historico = await obtener_historico_forex(moneda.upper(), dias)
+    historico = await yf_historico_forex(moneda.upper(), dias)
+    if historico is None:
+        historico = await fx_historico_forex(moneda.upper(), dias)
     if historico is None:
         return JSONResponse(content={"error": f"No se pudo obtener historico para {moneda.upper()}"}, status_code=503)
     return {

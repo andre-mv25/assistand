@@ -1,3 +1,9 @@
+"""Servicio de Inteligencia Artificial con DeepSeek API.
+
+Provee analisis de sentimiento, semaforo de inversion y veredicto final
+sobre simulaciones completas. Incluye cache, rate limiting, reintentos
+y circuito breaker para manejar fallas de forma elegante.
+"""
 import json as js
 import time
 import hashlib
@@ -11,16 +17,16 @@ _cache = {}
 CACHE_TTL = 600  # 10 minutos
 
 _rate_times = []
-RATE_MAX = 6          # max llamadas
-RATE_WINDOW = 60      # por minuto
+RATE_MAX = 30          # max llamadas por minuto (ajustado de 6 a 30)
+RATE_WINDOW = 60       # por minuto
 _rate_lock = asyncio.Lock()
 
 _fallos_consecutivos = 0
-CIRCUITO_UMBRAL = 3
-CIRCUITO_ESPERA = 60
+CIRCUITO_UMBRAL = 5    # circuito se abre despues de 5 fallos (era 3)
+CIRCUITO_ESPERA = 30   # circuito abierto por 30s (era 60s)
 _circuito_abierto_hasta = 0.0
 
-TIMEOUT_LLAMADA = 20  # segundos
+TIMEOUT_LLAMADA = 25   # segundos
 RETRIES = 3
 
 
@@ -183,16 +189,7 @@ async def _analizar_con_cache(nombre: str, clave_args: tuple, prompt: str, max_t
 
 
 async def analizar_sentimiento(moneda: str, precio: float, cambio: float):
-    """Analiza con DeepSeek el sentimiento del mercado para una moneda.
-
-    Args:
-        moneda: codigo de la divisa.
-        precio: cotizacion actual.
-        cambio: variacion porcentual del dia.
-    Returns:
-        Diccionario con ``sentimiento``, ``valor``, ``analisis``,
-        ``recomendacion`` y ``confianza``; o ``None`` si no hay clave/cache.
-    """
+    """Analiza con DeepSeek el sentimiento del mercado para una moneda."""
     if not DEEPSEEK_API_KEY:
         return None
 
@@ -203,7 +200,7 @@ Cambio: {cambio:.2f}%
 
 Responde UNICAMENTE con un JSON valido sin markdown:
 {{
-  "sentimiento": "alcista" | "bajista" | "neutral",
+  "sentimiento": "alta" | "baja" | "neutral",
   "valor": -1 a 1,
   "analisis": "breve explicacion (max 2 oraciones)",
   "recomendacion": "COMPRAR" | "VENDER" | "MANTENER",
@@ -214,15 +211,7 @@ Responde UNICAMENTE con un JSON valido sin markdown:
 
 
 async def analizar_semaforo(moneda: str, noticias: list):
-    """Analiza con DeepSeek las noticias recientes para emitir el semaforo.
-
-    Args:
-        moneda: codigo de la divisa.
-        noticias: lista de articulos (dicts con fuente, titulo, descripcion).
-    Returns:
-        Diccionario con ``semaforo``, ``sentimiento``, ``confianza``,
-        ``explicacion`` y ``noticias_clave``; o ``None`` si falla.
-    """
+    """Analiza con DeepSeek las noticias recientes para emitir el semaforo."""
     if not DEEPSEEK_API_KEY or not noticias:
         return None
 
@@ -240,7 +229,7 @@ NOTICIAS RECIENTES:
 Responde UNICAMENTE con un JSON valido sin markdown:
 {{
   "semaforo": "verde" | "amarillo" | "rojo",
-  "sentimiento": "alcista" | "bajista" | "neutral",
+  "sentimiento": "alta" | "baja" | "neutral",
   "confianza": 0.85,
   "explicacion": "breve explicacion del porque (max 2 oraciones)",
   "noticias_clave": ["titulo noticia mas relevante 1", "titulo noticia mas relevante 2"]
@@ -250,17 +239,7 @@ Responde UNICAMENTE con un JSON valido sin markdown:
 
 
 async def analizar_historico(moneda: str, precios: list[dict], capital_inicial: float, capital_final: float, rendimiento: float, sharpe: float, drawdown: float, win_rate: float, vader: dict | None = None, tipos_cambio: dict | None = None, acciones: list | None = None, pronostico: dict | None = None, senal_stat: dict | None = None):
-    """Genera el veredicto final de DeepSeek sobre una simulacion completa.
-
-    Construye un prompt con los resultados de la simulacion, indicadores tecnicos
-    (SMA, RSI, volatilidad), pronostico ARIMA/ARMA, sentimiento VADER, tipos de
-    cambio y acciones sugeridas, y pide a DeepSeek un JSON con el veredicto.
-
-    Returns:
-        Diccionario con ``sentimiento``, ``valor``, ``analisis`` (en lenguaje
-        simple), ``recomendacion``, ``confianza``, ``patron_encontrado``,
-        ``opciones`` y ``opciones_acciones``; o ``None`` si falla.
-    """
+    """Genera el veredicto final de DeepSeek sobre una simulacion completa."""
     if not DEEPSEEK_API_KEY or not precios:
         return None
 
@@ -344,7 +323,7 @@ SEMAFORO DE INVERSION (VADER sobre {vader.get('noticias_analizadas', 0)} noticia
             for a in acciones
         )
         acciones_context = f"""
-ACCIONES CANDIDATAS (universo amplio de empresas con datos reales de mercado de los ultimos 90 dias; formato: ticker|empresa|precio|cambio dia|momentum 60d|volatilidad anual|RSI|score retorno/riesgo):
+ACCIONES CANDIDATAS:
 {lineas}
 """
     # --- PRONOSTICO ESTADISTICO ARIMA/ARMA ---

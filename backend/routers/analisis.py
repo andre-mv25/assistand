@@ -12,7 +12,8 @@ from fastapi.responses import JSONResponse
 from database import get_db, insert_dual
 from security import encrypt_text
 from services.arima_service import pronostico_arima, senal_arma_desde_precios
-from services.yfinance_service import obtener_precios_forex, obtener_historico_par
+from services.yfinance_service import obtener_precios_forex as yf_precios_forex, obtener_historico_par as yf_historico_par
+from services.forex_service import obtener_precios_forex as fx_precios_forex, obtener_historico_forex as fx_historico_forex
 from services.deepseek_service import analizar_sentimiento, analizar_semaforo, analizar_historico
 from services.news_service import obtener_noticias
 from services.acciones_service import obtener_acciones
@@ -51,7 +52,7 @@ def _fallback_vader(moneda: str, rendimiento: float, sharpe: float, vader: dict 
 async def get_pronostico(from_curr: str, to_curr: str, dias: int = Query(80)):
     """Pronostico ARIMA a 5 dias + senal estadistica ARMA sobre rendimientos."""
     try:
-        historico = await obtener_historico_par(from_curr.upper(), to_curr.upper(), dias)
+        historico = await yf_historico_par(from_curr.upper(), to_curr.upper(), dias)
         if historico is None or len(historico) < 30:
             return JSONResponse(content={"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, status_code=503)
         valores = [p["precio"] for p in historico]
@@ -76,7 +77,9 @@ async def get_analisis(moneda: str = Query("USD")):
         ``{"moneda", "precio", "cambio", "analisis_deepseek", "semaforo", ...}``.
     """
     moneda = moneda.upper()
-    monedas = await obtener_precios_forex()
+    monedas = await yf_precios_forex()
+    if monedas is None:
+        monedas = await fx_precios_forex()
     if monedas is None:
         return JSONResponse(content={"error": "No se pudieron obtener precios Forex"}, status_code=503)
     data = monedas.get(moneda)
@@ -140,7 +143,9 @@ async def post_analizar_historico(data: dict = Body(...)):
 
     tipos_cambio = None
     try:
-        precios_fx = await obtener_precios_forex()
+        precios_fx = await yf_precios_forex()
+        if precios_fx is None:
+            precios_fx = await fx_precios_forex()
         if precios_fx:
             tasas = {}
             for a in ["USD", "EUR", "JPY"]:

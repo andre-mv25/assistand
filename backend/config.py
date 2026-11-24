@@ -5,6 +5,7 @@ entorno en produccion) y expone constantes de conexion a MongoDB, claves de API
 externas (DeepSeek, NewsAPI, Banxico, GNews) y parametros de la aplicacion.
 """
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -17,6 +18,9 @@ MONGO_DB = os.getenv("MONGO_DB", "trading_assistant")
 
 # URI efectiva: Atlas si esta definida, si no MongoDB local
 MONGO_URI = MONGO_URI_ATLAS or MONGO_URI_LOCAL
+
+if not MONGO_URI_ATLAS:
+    print("ADVERTENCIA: MONGO_URI_ATLAS no esta definida. Se usara MongoDB local si esta disponible.")
 
 # --- APIs externas ---
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
@@ -35,3 +39,11 @@ ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "")
 
 # --- Aplicacion ---
 INTERVALO_ACTUALIZACION = int(os.getenv("INTERVALO_ACTUALIZACION", "60"))
+
+# Validacion de variables críticas (no bloquean el inicio, solo advierten)
+if not DEEPSEEK_API_KEY:
+    print("ADVERTENCIA: DEEPSEEK_API_KEY no definida. El analisis IA no estara disponible.")
+if not NEWS_API_KEY:
+    print("ADVERTENCIA: NEWS_API_KEY no definida. Las noticias y VADER no funcionaran.")
+if not ENCRYPTION_KEY:
+    print("ADVERTENCIA: ENCRYPTION_KEY no definida. El cifrado de datos sensibles no funcionara.")

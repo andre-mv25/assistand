@@ -14,7 +14,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from database import get_db, insert_dual, delete_dual
+from database import get_db, insert_dual, delete_dual, find_one, update_one
 from security import hash_key, decrypt_text
 
 router = APIRouter(prefix="/api/auth", tags=["Autenticacion"])
@@ -130,7 +130,7 @@ async def validar_token(token: str):
         return None
     try:
         from datetime import datetime as dt
-        sesion = await db.sessions.find_one({
+        sesion = await find_one("sessions", {
             "token_hash": hash_key(token),
             "expires_at": {"$gt": dt.utcnow()},
         })
@@ -161,7 +161,7 @@ async def register(req: RegisterRequest):
     if not valida_ok:
         return JSONResponse(content={"error": valida_msg}, status_code=400)
 
-    existing = await db.users.find_one({"username_hash": hash_key(req.username.strip())})
+    existing = await find_one("users", {"username_hash": hash_key(req.username.strip())})
     if existing:
         return JSONResponse(content={"error": "El nombre de usuario ya existe"}, status_code=400)
 
@@ -187,7 +187,7 @@ async def login(req: LoginRequest):
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
 
-    user = await db.users.find_one({"username_hash": hash_key(req.username.strip())})
+    user = await find_one("users", {"username_hash": hash_key(req.username.strip())})
     if not user:
         return JSONResponse(content={"error": "El usuario no existe"}, status_code=404)
 
@@ -198,7 +198,8 @@ async def login(req: LoginRequest):
     # se reemplaza por PBKDF2 ahora que se conoce la contrasena correcta.
     if es_hash_legado(user["password"]):
         try:
-            await db.users.update_one(
+            await update_one(
+                "users",
                 {"_id": user["_id"]},
                 {"$set": {"password": await asyncio.to_thread(hash_password, req.password.strip())}},
             )
