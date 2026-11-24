@@ -1557,12 +1557,25 @@
                 }
 
                 document.getElementById('deepseekResult').innerHTML = `
-                    <p><strong>DeepSeek -- Veredicto Final</strong></p>
+                    <p><strong>${ai.fuente_fallback ? 'VADER (DeepSeek no disponible)' : 'DeepSeek -- Veredicto Final'}</strong></p>
                     ${resumenSimple}
                     ${pronIAHtml}
                     <p>${ai.analisis}</p>
-                    <p><small>Basado en Yahoo Finance + VADER (noticias) + DeepSeek + ARIMA/ARMA</small></p>
+                    <p><small>Basado en Yahoo Finance + VADER (noticias)${ai.fuente_fallback ? '' : ' + DeepSeek + ARIMA/ARMA'}</small></p>
                 `;
+
+                // Indicador de precisión
+                const precEl = document.getElementById('precisionValor');
+                const precDet = document.getElementById('precisionDetalle');
+                if (ai.fuente_fallback) {
+                    precEl.textContent = 'Media';
+                    precEl.style.color = '#ffaa00';
+                    precDet.textContent = 'Análisis basado solo en VADER (noticias). DeepSeek no disponible.';
+                } else {
+                    precEl.textContent = 'Alta';
+                    precEl.style.color = '#00ff88';
+                    precDet.textContent = 'Análisis con DeepSeek (IA) + VADER (noticias) + ARIMA/ARMA (estadístico).';
+                }
 
                 const badge = document.getElementById('sentimentBadge');
                 badge.textContent = sentimientoDisplay;
@@ -1683,6 +1696,15 @@
                             <p><small> Basado en noticias financieras vía VADER</small></p>
                         </div>
                     `;
+
+                    // Indicador de precisión para solo VADER
+                    const precEl = document.getElementById('precisionValor');
+                    const precDet = document.getElementById('precisionDetalle');
+                    if (precEl) {
+                        precEl.textContent = 'Media';
+                        precEl.style.color = '#ffaa00';
+                        precDet.textContent = 'Análisis basado solo en VADER (noticias). DeepSeek no disponible.';
+                    }
                 }
             }
         }

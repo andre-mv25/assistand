@@ -87,6 +87,12 @@ async def get_status():
     }
 
 
+@app.get("/health", tags=["Sistema"])
+async def health_check():
+    """Health check simple para monitoreo y balanceadores de carga."""
+    return {"status": "ok"}
+
+
 # ========== INCLUSIÓN DE ROUTERS MODULARES ==========
 app.include_router(auth.router)
 app.include_router(simulaciones.router)

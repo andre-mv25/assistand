@@ -248,8 +248,8 @@
                             </select>
                         </div>
                         <div class="panel-field-wide">
-                            <label for="montoInvertir" class="panel-label">Monto</label>
-                            <input type="number" id="montoInvertir" value="" min="100" step="100" class="panel-input" placeholder="Monto">
+                            <label for="montoInvertir" class="panel-label">monto de origen</label>
+                            <input type="number" id="montoInvertir" value="" min="100" step="100" class="panel-input" placeholder="Ingresa el monto">
                         </div>
                     </div>
                     <ul class="actions">
@@ -308,63 +308,7 @@
                     </div>
                     <canvas id="graficoGrande"></canvas>
 
-                    <div class="comp-explicador">
-                        <div class="comp-explicador-titulo">
-                            <i class="fas fa-info-circle"></i> ¿Qué son SMA5 y SMA20?
-                        </div>
-                        <p>
-                            <strong>SMA</strong> significa <em>media móvil simple</em> (simple moving average): es el promedio
-                            del precio de un par de divisas durante los últimos N días.
-                        </p>
-                        <ul class="sma-lista">
-                            <li><strong>SMA5</strong> = promedio del precio de los <strong>últimos 5 días</strong>. Reacciona rápido porque sigue lo que pasa hoy.</li>
-                            <li><strong>SMA20</strong> = promedio del precio de los <strong>últimos 20 días</strong>. Es más lento, pero muestra la tendencia más estable del último mes.</li>
-                        </ul>
-                        <p>
-                            <strong>Cómo leerlo:</strong> si el SMA5 está por <strong>encima</strong> del SMA20, el precio lleva días subiendo con fuerza
-                            (tendencia positiva, a favor de comprar). Si está por <strong>debajo</strong>, la tendencia es a la baja y conviene esperar.
-                            Mientras más juntos estén, más indeciso está el mercado.
-                        </p>
-                        <p><small>Los valores de SMA5 y SMA20 aparecen arriba, junto a tu capital y rendimiento.</small></p>
-                    </div>
 
-                    <div class="comp-explicador">
-                        <div class="comp-explicador-titulo">
-                            <i class="fas fa-info-circle"></i> ¿Qué es el pronóstico y la señal estadística?
-                        </div>
-                        <p>
-                            <strong>ARIMA</strong> es un modelo estadístico que estudia todo el historial del precio para calcular
-                            cómo podría seguir la curva en los próximos días. Con él dibujamos la <strong>línea punteada celeste</strong> al final de la gráfica.
-                        </p>
-                        <ul class="sma-lista">
-                            <li><strong>Línea punteada (F1 a F5)</strong> — el precio que el modelo calcula para los <strong>próximos 5 días</strong>, suponiendo que el comportamiento del mercado se repite.</li>
-                            <li><strong>Banda celeste</strong> — el rango donde es muy probable que el precio termine moviéndose. Si la banda es <strong>angosta</strong>, el modelo está seguro; si es <strong>ancha</strong>, hay mucha incertidumbre.</li>
-                        </ul>
-                        <p>
-                            <strong>Cómo leerlo:</strong> si la línea punteada va <strong>hacia arriba</strong>, el modelo espera que el precio suba;
-                            si va <strong>hacia abajo</strong>, espera que baje. No es una predicción exacta: es la apuesta más probable según lo que ya pasó,
-                            por eso siempre muestra un rango y no un número único.
-                        </p>
-                        <p>
-                            La <strong>señal estadística (ARMA)</strong> que aparece en el semáforo hace lo mismo pero con los movimientos diarios del precio:
-                            <strong>COMPRA</strong> si el modelo ve más fuerza para subir, <strong>VENTA</strong> si ve más fuerza para bajar y
-                            <strong>NEUTRAL</strong> si no se decide. La <strong>confianza</strong> indica qué tan seguro está el modelo de su apuesta.
-                        </p>
-                        <p><small>El pronóstico se calcula con los mismos 80 días de la gráfica y se actualiza al cambiar de par de divisas.</small></p>
-                    </div>
-
-                    <div class="comp-explicador">
-                        <div class="comp-explicador-titulo">
-                            <i class="fas fa-info-circle"></i> Conceptos de la gráfica
-                        </div>
-                        <ul class="sma-lista">
-                            <li><strong>Tipo de cambio</strong> — cuánto cuesta una moneda expresada en otra (ej. 17.50 pesos por cada dólar).</li>
-                            <li><strong>Posición</strong> — qué moneda tienes comprada en este momento de la simulación.</li>
-                            <li><strong>Capital</strong> — el dinero actual de tu inversión (lo que empezaste más lo ganado o perdido).</li>
-                            <li><strong>Rendimiento</strong> — cuánto cambió tu dinero en porcentaje: +10% significa que por cada $100 ahora tienes $110.</li>
-                            <li><strong>Generado</strong> — el dinero en pesos que ganaste o perdiste (el rendimiento, pero en dinero real).</li>
-                        </ul>
-                    </div>
                 </div>
             </section>
 
@@ -480,6 +424,12 @@
                         </div>
                     </div>
 
+                    <div class="precision-card">
+                        <div class="precision-label">Precisión del análisis</div>
+                        <div class="precision-valor" id="precisionValor">—</div>
+                        <div class="precision-detalle" id="precisionDetalle">—</div>
+                    </div>
+
                     <div id="noticiasUsadas" style="display: none;">
                         <h4>Noticias y Publicaciones Analizadas</h4>
                         <ul class="news-list" id="newsList"></ul>
@@ -551,6 +501,66 @@
                     </ul>
                 </div>
             </section>
+
+                    <div class="explicadores-final">
+                        <div class="comp-explicador">
+                            <div class="comp-explicador-titulo">
+                                <i class="fas fa-info-circle"></i> ¿Qué son SMA5 y SMA20?
+                            </div>
+                            <p>
+                                <strong>SMA</strong> significa <em>media móvil simple</em> (simple moving average): es el promedio
+                                del precio de un par de divisas durante los últimos N días.
+                            </p>
+                            <ul class="sma-lista">
+                                <li><strong>SMA5</strong> = promedio del precio de los <strong>últimos 5 días</strong>. Reacciona rápido porque sigue lo que pasa hoy.</li>
+                                <li><strong>SMA20</strong> = promedio del precio de los <strong>últimos 20 días</strong>. Es más lento, pero muestra la tendencia más estable del último mes.</li>
+                            </ul>
+                            <p>
+                                <strong>Cómo leerlo:</strong> si el SMA5 está por <strong>encima</strong> del SMA20, el precio lleva días subiendo con fuerza
+                                (tendencia positiva, a favor de comprar). Si está por <strong>debajo</strong>, la tendencia es a la baja y conviene esperar.
+                                Mientras más juntos estén, más indeciso está el mercado.
+                            </p>
+                            <p><small>Los valores de SMA5 y SMA20 aparecen arriba, junto a tu capital y rendimiento.</small></p>
+                        </div>
+
+                        <div class="comp-explicador">
+                            <div class="comp-explicador-titulo">
+                                <i class="fas fa-info-circle"></i> ¿Qué es el pronóstico y la señal estadística?
+                            </div>
+                            <p>
+                                <strong>ARIMA</strong> es un modelo estadístico que estudia todo el historial del precio para calcular
+                                cómo podría seguir la curva en los próximos días. Con él dibujamos la <strong>línea punteada celeste</strong> al final de la gráfica.
+                            </p>
+                            <ul class="sma-lista">
+                                <li><strong>Línea punteada (F1 a F5)</strong> — el precio que el modelo calcula para los <strong>próximos 5 días</strong>, suponiendo que el comportamiento del mercado se repite.</li>
+                                <li><strong>Banda celeste</strong> — el rango donde es muy probable que el precio termine moviéndose. Si la banda es <strong>angosta</strong>, el modelo está seguro; si es <strong>ancha</strong>, hay mucha incertidumbre.</li>
+                            </ul>
+                            <p>
+                                <strong>Cómo leerlo:</strong> si la línea punteada va <strong>hacia arriba</strong>, el modelo espera que el precio suba;
+                                si va <strong>hacia abajo</strong>, espera que baje. No es una predicción exacta: es la apuesta más probable según lo que ya pasó,
+                                por eso siempre muestra un rango y no un número único.
+                            </p>
+                            <p>
+                                La <strong>señal estadística (ARMA)</strong> que aparece en el semáforo hace lo mismo pero con los movimientos diarios del precio:
+                                <strong>COMPRA</strong> si el modelo ve más fuerza para subir, <strong>VENTA</strong> si ve más fuerza para bajar y
+                                <strong>NEUTRAL</strong> si no se decide. La <strong>confianza</strong> indica qué tan seguro está el modelo de su apuesta.
+                            </p>
+                            <p><small>El pronóstico se calcula con los mismos 80 días de la gráfica y se actualiza al cambiar de par de divisas.</small></p>
+                        </div>
+
+                        <div class="comp-explicador">
+                            <div class="comp-explicador-titulo">
+                                <i class="fas fa-info-circle"></i> Conceptos de la gráfica
+                            </div>
+                            <ul class="sma-lista">
+                                <li><strong>Tipo de cambio</strong> — cuánto cuesta una moneda expresada en otra (ej. 17.50 pesos por cada dólar).</li>
+                                <li><strong>Posición</strong> — qué moneda tienes comprada en este momento de la simulación.</li>
+                                <li><strong>Capital</strong> — el dinero actual de tu inversión (lo que empezaste más lo ganado o perdido).</li>
+                                <li><strong>Rendimiento</strong> — cuánto cambió tu dinero en porcentaje: +10% significa que por cada $100 ahora tienes $110.</li>
+                                <li><strong>Generado</strong> — el dinero en pesos que ganaste o perdiste (el rendimiento, pero en dinero real).</li>
+                            </ul>
+                        </div>
+                    </div>
 
         </div>
 

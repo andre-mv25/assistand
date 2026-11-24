@@ -1138,6 +1138,33 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
     font-weight: 700;
 }
 
+/* Precisión del análisis */
+.precision-card {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.12);
+    text-align: center;
+}
+.precision-card .precision-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.6;
+    margin-bottom: 0.4rem;
+}
+.precision-card .precision-valor {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+.precision-card .precision-detalle {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    line-height: 1.4;
+}
+
 /* News list */
 .news-list {
     list-style: none;
@@ -1569,6 +1596,10 @@ body.js-ready #main .bloque:nth-child(5) { transition-delay: 0.24s; }
 #dashboard .panel-field-wide {
     flex: 1 1 0;
     min-width: 150px;
+}
+#dashboard .panel-field-wide {
+    min-width: 230px;
+    flex: 1.5 1 0;
 }
 #dashboard .panel-label {
     font-size: 0.85rem;
@@ -2503,4 +2534,19 @@ h2.major {
 }
 .auth-form {
     width: 100%;
+}
+
+/* ---------- Explicativos finales: apilados y ordenados ---------- */
+.explicadores-final {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    width: 100%;
+}
+.explicadores-final .comp-explicador {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
 }
