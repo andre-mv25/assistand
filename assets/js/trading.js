@@ -1677,6 +1677,7 @@
                 registrarSimulacionActual(simDatos);
             } catch (e) {
                 console.log('Error en análisis DeepSeek:', e);
+                document.getElementById('analisisExtra').style.display = 'block';
                 if (!vaderData || vaderData.error) {
                     document.getElementById('deepseekResult').innerHTML = `
                         <div class="deepseek-card">
@@ -1684,6 +1685,13 @@
                             <p><small> No se pudo obtener análisis de DeepSeek ni VADER</small></p>
                         </div>
                     `;
+                    const precEl = document.getElementById('precisionValor');
+                    const precDet = document.getElementById('precisionDetalle');
+                    if (precEl) {
+                        precEl.textContent = 'Baja';
+                        precEl.style.color = '#ff4444';
+                        precDet.textContent = 'No se pudo obtener análisis (DeepSeek y VADER no disponibles).';
+                    }
                 } else {
                     const clasif = vaderData.clasificacion;
                     const label = clasif === 'alta' ? 'ALTA' : clasif === 'baja' ? 'BAJA' : 'NEUTRAL';
