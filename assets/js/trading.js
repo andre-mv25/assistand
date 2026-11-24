@@ -28,6 +28,11 @@
             return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
+        function limpiarEmojis(texto) {
+            if (!texto) return texto;
+            return texto.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}]/gu, '').replace(/\s+/g, ' ').trim();
+        }
+
         function clampNum(v, min, max) {
             return Math.min(max, Math.max(min, v));
         }
@@ -1461,7 +1466,7 @@
                             badge.textContent = n.fuente === 'DOF' ? 'DOF' : n.fuente.substring(0, 8);
                             const title = document.createElement('a');
                             title.className = 'news-title';
-                            title.textContent = n.titulo;
+                            title.textContent = limpiarEmojis(n.titulo);
                             title.href = n.url || '#';
                             title.target = '_blank';
                             title.rel = 'noopener';
