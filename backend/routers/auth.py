@@ -1,12 +1,14 @@
-"""Router de autenticación y gestión de sesiones de usuario.
+"""Router de autenticacion y gestion de sesiones de usuario.
 
-Define los endpoints para registro de usuarios con validación de contraseña
-fuerte, inicio de sesión mediante hash SHA-256 con salt aleatorio, consulta
-del usuario autenticado y cierre de sesión.
+Define los endpoints para registro de usuarios con validacion de contrasena
+fuerte, inicio de sesion mediante hash PBKDF2-HMAC-SHA256 con salt aleatorio,
+consulta del usuario autenticado y cierre de sesion.
 """
 import re
+import asyncio
 import secrets
 import hashlib
+import hmac
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
@@ -15,7 +17,7 @@ from pydantic import BaseModel
 from database import get_db, insert_dual, delete_dual
 from security import hash_key, decrypt_text
 
-router = APIRouter(prefix="/api/auth", tags=["Autenticación"])
+router = APIRouter(prefix="/api/auth", tags=["Autenticacion"])
 
 
 class RegisterRequest(BaseModel):
@@ -25,13 +27,13 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Esquema de solicitud para inicio de sesión."""
+    """Esquema de solicitud para inicio de sesion."""
     username: str
     password: str
 
 
 def validar_password(p: str):
-    """Valida la política de contraseñas: mínimo 8 caracteres, mayúscula, número y símbolo."""
+    """Valida la politica de contrasenas: minimo 8 caracteres, mayuscula, numero y simbolo."""
     if len(p) < 8:
         return False, "La contrasena debe tener al menos 8 caracteres"
     if not re.search(r"[A-Z]", p):
@@ -43,34 +45,58 @@ def validar_password(p: str):
     return True, ""
 
 
+PBKDF2_ALGORITMO = "pbkdf2_sha256"
+PBKDF2_ITERACIONES = 600_000  # Recomendacion OWASP 2023 para PBKDF2-HMAC-SHA256
+
+
 def hash_password(password: str) -> str:
-    """Genera hash SHA-256 con salt aleatorio de 16 bytes."""
+    """Genera el hash de la contrasena con PBKDF2-HMAC-SHA256 y salt aleatorio.
+
+    PBKDF2 aplica la funcion hash cientos de miles de veces, lo que hace muy
+    costoso un ataque de fuerza bruta aunque se filtre la base de datos.
+    Formato almacenado: ``pbkdf2_sha256$<iteraciones>$<salt_hex>$<hash_hex>``.
+    """
     salt = secrets.token_hex(16)
-    h = hashlib.sha256((salt + password).encode()).hexdigest()
-    return f"{salt}:{h}"
+    h = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), PBKDF2_ITERACIONES).hex()
+    return f"{PBKDF2_ALGORITMO}${PBKDF2_ITERACIONES}${salt}${h}"
+
+
+def es_hash_legado(stored: str) -> bool:
+    """Indica si el hash es del formato anterior (``salt:sha256``) y debe actualizarse."""
+    return isinstance(stored, str) and not stored.startswith(PBKDF2_ALGORITMO + "$")
 
 
 def verify_password(password: str, stored: str) -> bool:
-    """Verifica si la contraseña coincide con el salt:hash almacenado."""
+    """Verifica la contrasena contra el hash almacenado (comparacion en tiempo constante).
+
+    Acepta el formato actual (PBKDF2) y el formato legado ``salt:sha256`` para
+    que las cuentas creadas antes del cambio sigan funcionando; esas cuentas se
+    migran a PBKDF2 automaticamente en su siguiente inicio de sesion.
+    """
     try:
-        salt, h = stored.split(":")
-        return hashlib.sha256((salt + password).encode()).hexdigest() == h
+        if stored.startswith(PBKDF2_ALGORITMO + "$"):
+            _, iteraciones, salt, h = stored.split("$")
+            calculado = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), int(iteraciones)).hex()
+        else:
+            salt, h = stored.split(":")
+            calculado = hashlib.sha256((salt + password).encode()).hexdigest()
+        return hmac.compare_digest(calculado, h)
     except (ValueError, AttributeError):
         return False
 
 
 def generar_token() -> str:
-    """Genera un token de sesión seguro de 32 bytes (64 caracteres hex)."""
+    """Genera un token de sesion seguro de 32 bytes (64 caracteres hex)."""
     return secrets.token_hex(32)
 
 
 async def crear_sesion(username: str) -> str:
-    """Crea una sesión para el usuario: genera un token y lo guarda (hash) en la BD.
+    """Crea una sesion para el usuario: genera un token y lo guarda (hash) en la BD.
 
     Args:
         username: nombre del usuario.
     Returns:
-        El token de sesión (64 caracteres hex). La BD guarda solo su hash.
+        El token de sesion (64 caracteres hex). La BD guarda solo su hash.
     """
     token = generar_token()
     db = get_db()
@@ -89,12 +115,12 @@ async def crear_sesion(username: str) -> str:
 
 
 async def validar_token(token: str):
-    """Valida un token de sesión contra la base de datos.
+    """Valida un token de sesion contra la base de datos.
 
     Args:
-        token: token de sesión a validar.
+        token: token de sesion a validar.
     Returns:
-        El documento de la sesión (con ``username``) si es válido y no ha
+        El documento de la sesion (con ``username``) si es valido y no ha
         expirado; o ``None`` en caso contrario.
     """
     if not token:
@@ -117,11 +143,11 @@ async def validar_token(token: str):
 
 @router.post("/register")
 async def register(req: RegisterRequest):
-    """Registra un nuevo usuario (política de contraseña fuerte) y abre sesión.
+    """Registra un nuevo usuario (politica de contrasena fuerte) y abre sesion.
 
     Args:
-        req: ``{"username", "password"}`` (el usuario debe tener mínimo 3 chars
-        y la contraseña mínimo 8 con mayúscula, número y símbolo).
+        req: ``{"username", "password"}`` (el usuario debe tener minimo 3 chars
+        y la contrasena minimo 8 con mayuscula, numero y simbolo).
     Returns:
         ``{"success", "message", "token", "username"}``.
     """
@@ -139,7 +165,7 @@ async def register(req: RegisterRequest):
     if existing:
         return JSONResponse(content={"error": "El nombre de usuario ya existe"}, status_code=400)
 
-    hashed = hash_password(req.password.strip())
+    hashed = await asyncio.to_thread(hash_password, req.password.strip())
     await insert_dual("users", {
         "username_hash": hash_key(req.username.strip()),
         "username": req.username.strip(),
@@ -152,7 +178,7 @@ async def register(req: RegisterRequest):
 
 @router.post("/login")
 async def login(req: LoginRequest):
-    """Inicia sesión verificando credenciales y crea un token de sesión.
+    """Inicia sesion verificando credenciales y crea un token de sesion.
 
     Returns:
         ``{"success", "message", "token", "username"}``.
@@ -165,25 +191,36 @@ async def login(req: LoginRequest):
     if not user:
         return JSONResponse(content={"error": "El usuario no existe"}, status_code=404)
 
-    if not verify_password(req.password.strip(), user["password"]):
-        return JSONResponse(content={"error": "Contraseña incorrecta"}, status_code=401)
+    if not await asyncio.to_thread(verify_password, req.password.strip(), user["password"]):
+        return JSONResponse(content={"error": "Contrasena incorrecta"}, status_code=401)
+
+    # Migracion transparente: si la cuenta usa el hash anterior (SHA-256 simple),
+    # se reemplaza por PBKDF2 ahora que se conoce la contrasena correcta.
+    if es_hash_legado(user["password"]):
+        try:
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"password": await asyncio.to_thread(hash_password, req.password.strip())}},
+            )
+        except Exception as e:
+            print(f"Error migrando hash de contrasena: {e}")
 
     token = await crear_sesion(req.username.strip())
-    return {"success": True, "message": "Inicio de sesión exitoso", "token": token, "username": req.username.strip()}
+    return {"success": True, "message": "Inicio de sesion exitoso", "token": token, "username": req.username.strip()}
 
 
 @router.get("/me")
 async def auth_me(token: str = Query("")):
-    """Devuelve el usuario autenticado con el token, o 401 si es inválido."""
+    """Devuelve el usuario autenticado con el token, o 401 si es invalido."""
     sesion = await validar_token(token)
     if not sesion:
-        return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
+        return JSONResponse(content={"error": "Sesion invalida o expirada"}, status_code=401)
     return {"success": True, "username": sesion["username"]}
 
 
 @router.post("/logout")
 async def logout(token: str = Query("")):
-    """Cierra la sesión: elimina el documento de la sesión de la base de datos."""
+    """Cierra la sesion: elimina el documento de la sesion de la base de datos."""
     db = get_db()
     if db is not None and token:
         try:

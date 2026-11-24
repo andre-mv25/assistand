@@ -124,7 +124,7 @@ def _sincrono_obtener_historico_par(from_curr: str, to_curr: str, dias: int = 30
 
     if to_curr == "USD":
         hist = _sincrono_obtener_historico(from_curr, dias)
-        return hist  # Ya está en USD por unidad de la moneda FROM
+        return hist  # Ya esta en USD por unidad de la moneda FROM
 
     # Ambos no-USD: descargar ambos y calcular tasa cruzada
     data_from = yf.download(cfg_from["ticker"], period=f"{dias}d", interval="1d", progress=False)

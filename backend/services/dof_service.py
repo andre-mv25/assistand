@@ -44,5 +44,5 @@ async def obtener_tipo_cambio_dolar() -> dict | None:
         "moneda_cotizacion": "MXN",
         "valor": valor,
         "fecha": fecha,
-        "fuente": "DOF (Banco de México)",
+        "fuente": "DOF (Banco de Mexico)",
     }

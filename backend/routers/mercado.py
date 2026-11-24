@@ -1,11 +1,12 @@
 """Router de datos de mercado, cotizaciones Forex, noticias y sentimiento.
 
 Define los endpoints para consultar precios en tiempo real (Yahoo Finance),
-históricos de divisas, criptomonedas en tendencia (CoinGecko), noticias financieras
-(NewsAPI), sentimiento léxico (VADER) y tipos de cambio oficiales (Banxico y DOF).
+historicos de divisas, criptomonedas en tendencia (CoinGecko), noticias financieras
+(NewsAPI), sentimiento lexico (VADER) y tipos de cambio oficiales (Banxico y DOF).
 """
 from datetime import datetime
 from fastapi import APIRouter, Query
+from fastapi.responses import JSONResponse
 
 from database import get_db, insert_dual
 from services.yfinance_service import (
@@ -28,7 +29,7 @@ async def get_precios():
     """Obtiene las cotizaciones Forex actuales de todas las monedas soportadas."""
     monedas = await obtener_precios_forex()
     if monedas is None:
-        return {"error": "No se pudieron obtener precios Forex"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener precios Forex"}, status_code=503)
     db = get_db()
     if db is not None:
         try:
@@ -49,17 +50,17 @@ async def get_precios():
 
 @router.get("/precios/{moneda}")
 async def get_precio_moneda(moneda: str):
-    """Obtiene la cotización actual de una moneda concreta.
+    """Obtiene la cotizacion actual de una moneda concreta.
 
     Args:
-        moneda: código (USD, MXN, JPY, EUR).
+        moneda: codigo (USD, MXN, JPY, EUR).
     """
     monedas = await obtener_precios_forex()
     if monedas is None:
-        return {"error": "No se pudieron obtener precios Forex"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener precios Forex"}, status_code=503)
     data = monedas.get(moneda.upper())
     if not data:
-        return {"error": f"Moneda {moneda} no soportada"}, 404
+        return JSONResponse(content={"error": f"Moneda {moneda} no soportada"}, status_code=404)
     return {
         "moneda": moneda.upper(),
         "precio": data["precio"],
@@ -73,22 +74,22 @@ async def get_par(from_curr: str, to_curr: str):
     """Obtiene la tasa de cambio actual del par FROM/TO (ej. USD/MXN)."""
     par = await obtener_precio_par(from_curr.upper(), to_curr.upper())
     if par is None:
-        return {"error": "No se pudo obtener el par"}, 503
+        return JSONResponse(content={"error": "No se pudo obtener el par"}, status_code=503)
     return par
 
 
 @router.get("/historico_par/{from_curr}/{to_curr}")
 async def get_historico_par(from_curr: str, to_curr: str, dias: int = Query(60)):
-    """Obtiene el histórico diario del par FROM/TO.
+    """Obtiene el historico diario del par FROM/TO.
 
     Args:
-        dias: cantidad de días del histórico (default 60).
+        dias: cantidad de dias del historico (default 60).
     Returns:
         ``{"from", "to", "datos": [...], "timestamp"}``.
     """
     historico = await obtener_historico_par(from_curr.upper(), to_curr.upper(), dias)
     if historico is None:
-        return {"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, 503
+        return JSONResponse(content={"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, status_code=503)
     return {
         "from": from_curr.upper(),
         "to": to_curr.upper(),
@@ -99,15 +100,15 @@ async def get_historico_par(from_curr: str, to_curr: str, dias: int = Query(60))
 
 @router.get("/historico/{moneda}")
 async def get_historico(moneda: str, dias: int = Query(30)):
-    """Obtiene el histórico diario de una moneda frente al USD.
+    """Obtiene el historico diario de una moneda frente al USD.
 
     Args:
-        moneda: código de la divisa (JPY, EUR, MXN...).
-        dias: cantidad de días del histórico (default 30).
+        moneda: codigo de la divisa (JPY, EUR, MXN...).
+        dias: cantidad de dias del historico (default 30).
     """
     historico = await obtener_historico_forex(moneda.upper(), dias)
     if historico is None:
-        return {"error": f"No se pudo obtener historico para {moneda.upper()}"}, 503
+        return JSONResponse(content={"error": f"No se pudo obtener historico para {moneda.upper()}"}, status_code=503)
     return {
         "moneda": moneda.upper(),
         "datos": historico,
@@ -117,10 +118,10 @@ async def get_historico(moneda: str, dias: int = Query(30)):
 
 @router.get("/tendencias")
 async def get_tendencias():
-    """Obtiene las criptomonedas más buscadas (trending) en CoinGecko."""
+    """Obtiene las criptomonedas mas buscadas (trending) en CoinGecko."""
     tendencias = await obtener_tendencias()
     if tendencias is None:
-        return {"error": "No se pudieron obtener tendencias"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener tendencias"}, status_code=503)
     return {
         "tendencias": tendencias,
         "timestamp": datetime.utcnow().isoformat(),
@@ -136,14 +137,14 @@ async def get_noticias(
     """Busca noticias financieras en NewsAPI.
 
     Args:
-        query: términos de búsqueda.
+        query: terminos de busqueda.
         fuentes: lista de fuentes separadas por coma (opcional).
-        cantidad: número de artículos (1-50).
+        cantidad: numero de articulos (1-50).
     """
     lista_fuentes = fuentes.split(",") if fuentes else None
     noticias = await obtener_noticias(query, lista_fuentes, cantidad)
     if noticias is None:
-        return {"error": "No se pudieron obtener noticias"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener noticias"}, status_code=503)
     return {
         "noticias": noticias,
         "total": len(noticias),
@@ -157,10 +158,10 @@ async def get_portadas(
     pais: str = Query("us"),
     cantidad: int = Query(5, ge=1, le=20),
 ):
-    """Obtiene las portadas de noticias por categoría y país (NewsAPI)."""
+    """Obtiene las portadas de noticias por categoria y pais (NewsAPI)."""
     noticias = await obtener_portadas(categoria, pais, cantidad)
     if noticias is None:
-        return {"error": "No se pudieron obtener portadas"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener portadas"}, status_code=503)
     return {
         "noticias": noticias,
         "total": len(noticias),
@@ -173,21 +174,21 @@ async def get_vader(query: str = Query("forex OR trading OR divisas"), cantidad:
     """Analiza el sentimiento del mercado con VADER sobre las noticias obtenidas.
 
     Args:
-        query: términos de búsqueda.
-        cantidad: máximo de artículos a analizar (hasta 2000).
+        query: terminos de busqueda.
+        cantidad: maximo de articulos a analizar (hasta 2000).
     """
     resultado = await analizar_vader(query=query, cantidad=cantidad)
     if resultado is None:
-        return {"error": "No se pudieron analizar noticias con VADER"}, 503
+        return JSONResponse(content={"error": "No se pudieron analizar noticias con VADER"}, status_code=503)
     return resultado
 
 
 @router.get("/dof/tipo_cambio")
 async def get_dof_tipo_cambio():
-    """Obtiene el tipo de cambio del dólar publicado en el DOF (Diario Oficial)."""
+    """Obtiene el tipo de cambio del dolar publicado en el DOF (Diario Oficial)."""
     resultado = await obtener_tipo_cambio_dolar()
     if resultado is None:
-        return {"error": "No se pudo obtener el tipo de cambio del DOF"}, 503
+        return JSONResponse(content={"error": "No se pudo obtener el tipo de cambio del DOF"}, status_code=503)
     return resultado
 
 
@@ -196,7 +197,7 @@ async def get_banxico_tipo_cambio(moneda: str = Query("USD")):
     """Obtiene el tipo de cambio oficial FIX de Banxico para una moneda."""
     resultado = await obtener_tipo_cambio(moneda)
     if resultado is None:
-        return {"error": f"No se pudo obtener el tipo de cambio de {moneda} en Banxico"}, 503
+        return JSONResponse(content={"error": f"No se pudo obtener el tipo de cambio de {moneda} en Banxico"}, status_code=503)
     return resultado
 
 
@@ -205,5 +206,5 @@ async def get_banxico_tipo_cambio_all():
     """Obtiene los tipos de cambio FIX de Banxico para todas las monedas soportadas."""
     resultado = await obtener_tipo_cambio_multiples()
     if resultado is None:
-        return {"error": "No se pudieron obtener los tipos de cambio de Banxico"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener los tipos de cambio de Banxico"}, status_code=503)
     return resultado

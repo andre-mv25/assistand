@@ -6,6 +6,7 @@ BTC) y las monedas mas buscadas (trending) de CoinGecko.
 import httpx
 from config import COINGECKO_BASE_URL
 
+
 async def obtener_sentimiento_mercado():
     """Obtiene el sentimiento global del mercado de criptomonedas.
 

@@ -9,11 +9,11 @@ from config import BANXICO_API_KEY
 
 BANXICO_BASE_URL = "https://www.banxico.org.mx/SieAPIRest/service/v1"
 
-# Series oficiales de tipo de cambio FIX (Banco de México)
+# Series oficiales de tipo de cambio FIX (Banco de Mexico)
 SERIES_TIPO_CAMBIO = {
-    "USD": "SF43718",   # Dólar (pesos por dólar)
+    "USD": "SF43718",   # Dolar (pesos por dolar)
     "EUR": "SF46410",   # Euro (pesos por euro)
-    "JPY": "SF46406",   # Yen japonés (pesos por yen)
+    "JPY": "SF46406",   # Yen japones (pesos por yen)
 }
 
 
@@ -59,7 +59,7 @@ async def obtener_tipo_cambio(moneda: str = "USD", fecha: str | None = None) -> 
             "moneda": moneda.upper(),
             "valor": float(valor),
             "fecha": obs.get("fecha", hoy),
-            "fuente": "Banxico (Banco de México)",
+            "fuente": "Banxico (Banco de Mexico)",
             "serie": serie_data.get("idSerie", serie),
         }
     except (KeyError, IndexError, ValueError, TypeError):
@@ -70,7 +70,7 @@ async def obtener_tipo_cambio_multiples(monedas: list[str] | None = None) -> dic
     """Obtiene el tipo de cambio FIX de varias monedas a la vez.
 
     Args:
-        monedas: lista de codigos; por defecto todas las series definidas.
+        monedas: lista de codigos; si es None se usan todas las series definidas.
     Returns:
         Diccionario ``{codigo: resultado}`` o ``None`` si no hay resultados.
     """

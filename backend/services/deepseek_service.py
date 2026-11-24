@@ -266,7 +266,7 @@ async def analizar_historico(moneda: str, precios: list[dict], capital_inicial: 
 
     valores = [p["precio"] for p in precios]
 
-    # --- INDICADORES TÉCNICOS ---
+    # --- INDICADORES TECNICOS ---
     def sma(data, periodo):
         if len(data) < periodo: return None
         return sum(data[-periodo:]) / periodo

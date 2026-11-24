@@ -57,7 +57,7 @@ async def analizar_noticias(query: str = "forex OR trading OR divisas", cantidad
     total_google = len(google) if google else 0
     total_gnews = len(gnews) if gnews else 0
 
-    # Análisis de sentimiento con VADER
+    # Analisis de sentimiento con VADER
     if articulos:
         for a in articulos:
             texto = f"{a['titulo']}. {a['descripcion']}" if a['descripcion'] else a['titulo']

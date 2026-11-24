@@ -1,12 +1,13 @@
-"""Router para análisis de sentimiento IA (DeepSeek) y pronósticos estadísticos (ARIMA/ARMA).
+"""Router para analisis de sentimiento IA (DeepSeek) y pronosticos estadisticos (ARIMA/ARMA).
 
-Define los endpoints para el pronóstico a 5 días con bandas de confianza,
-el análisis en tiempo real por divisa (combinando DeepSeek y noticias) y
-el veredicto final sobre la simulación completa del usuario.
+Define los endpoints para el pronostico a 5 dias con bandas de confianza,
+el analisis en tiempo real por divisa (combinando DeepSeek y noticias) y
+el veredicto final sobre la simulacion completa del usuario.
 """
 import json
 from datetime import datetime
 from fastapi import APIRouter, Query, Body
+from fastapi.responses import JSONResponse
 
 from database import get_db, insert_dual
 from security import encrypt_text
@@ -16,11 +17,11 @@ from services.deepseek_service import analizar_sentimiento, analizar_semaforo, a
 from services.news_service import obtener_noticias
 from services.acciones_service import obtener_acciones
 
-router = APIRouter(prefix="/api", tags=["Análisis"])
+router = APIRouter(prefix="/api", tags=["Analisis"])
 
 
 def _fallback_vader(moneda: str, rendimiento: float, sharpe: float, vader: dict | None):
-    """Análisis degradado basado en VADER cuando DeepSeek no está disponible."""
+    """Analisis degradado basado en VADER cuando DeepSeek no esta disponible."""
     if not vader:
         return None
     compound = vader.get("compound_score", 0.0) or 0.0
@@ -48,39 +49,39 @@ def _fallback_vader(moneda: str, rendimiento: float, sharpe: float, vader: dict 
 
 @router.get("/pronostico/{from_curr}/{to_curr}")
 async def get_pronostico(from_curr: str, to_curr: str, dias: int = Query(80)):
-    """Pronóstico ARIMA a 5 días + señal estadística ARMA sobre rendimientos."""
+    """Pronostico ARIMA a 5 dias + senal estadistica ARMA sobre rendimientos."""
     try:
         historico = await obtener_historico_par(from_curr.upper(), to_curr.upper(), dias)
         if historico is None or len(historico) < 30:
-            return {"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, 503
+            return JSONResponse(content={"error": f"No se pudo obtener historico para {from_curr}/{to_curr}"}, status_code=503)
         valores = [p["precio"] for p in historico]
         pron = pronostico_arima(valores)
         if pron is None:
-            return {"error": "No hay suficientes datos para el pronostico"}, 503
+            return JSONResponse(content={"error": "No hay suficientes datos para el pronostico"}, status_code=503)
         pron["senal_estadistica"] = senal_arma_desde_precios(valores)
         pron["timestamp"] = datetime.utcnow().isoformat()
         return {"success": True, "from": from_curr.upper(), "to": to_curr.upper(), **pron}
     except Exception as e:
         print(f"Error pronostico {from_curr}/{to_curr}: {e}")
-        return {"error": "No se pudo calcular el pronostico"}, 503
+        return JSONResponse(content={"error": "No se pudo calcular el pronostico"}, status_code=503)
 
 
 @router.get("/analisis")
 async def get_analisis(moneda: str = Query("USD")):
-    """Analiza una moneda: sentimiento DeepSeek + semáforo basado en noticias.
+    """Analiza una moneda: sentimiento DeepSeek + semaforo basado en noticias.
 
     Args:
-        moneda: código de la divisa (default USD).
+        moneda: codigo de la divisa (default USD).
     Returns:
         ``{"moneda", "precio", "cambio", "analisis_deepseek", "semaforo", ...}``.
     """
     moneda = moneda.upper()
     monedas = await obtener_precios_forex()
     if monedas is None:
-        return {"error": "No se pudieron obtener precios Forex"}, 503
+        return JSONResponse(content={"error": "No se pudieron obtener precios Forex"}, status_code=503)
     data = monedas.get(moneda)
     if not data:
-        return {"error": f"Moneda {moneda} no soportada"}, 404
+        return JSONResponse(content={"error": f"Moneda {moneda} no soportada"}, status_code=404)
 
     analisis = await analizar_sentimiento(moneda, data["precio"], data["cambio"])
 
@@ -115,10 +116,10 @@ async def get_analisis(moneda: str = Query("USD")):
 
 @router.post("/analizar_historico")
 async def post_analizar_historico(data: dict = Body(...)):
-    """Analiza una simulación completa con DeepSeek (veredicto final).
+    """Analiza una simulacion completa con DeepSeek (veredicto final).
 
-    Recibe el histórico de precios y las métricas de la simulación, calcula el
-    pronóstico ARIMA/ARMA, envía todo a DeepSeek y guarda el análisis cifrado.
+    Recibe el historico de precios y las metricas de la simulacion, calcula el
+    pronostico ARIMA/ARMA, envia todo a DeepSeek y guarda el analisis cifrado.
 
     Returns:
         ``{"moneda", "analisis", "pronostico", "senal_estadistica", "timestamp"}``.
@@ -135,7 +136,7 @@ async def post_analizar_historico(data: dict = Body(...)):
     vader = data.get("vader")
 
     if not precios:
-        return {"error": "No hay datos historicos"}, 400
+        return JSONResponse(content={"error": "No hay datos historicos"}, status_code=400)
 
     tipos_cambio = None
     try:
@@ -183,7 +184,7 @@ async def post_analizar_historico(data: dict = Body(...)):
         print(f"DeepSeek no disponible para {moneda}, usando fallback VADER")
         analisis = _fallback_vader(moneda, rendimiento, sharpe, vader)
     if analisis is None:
-        return {"error": "No se pudo obtener analisis (DeepSeek ni VADER disponibles)"}, 503
+        return JSONResponse(content={"error": "No se pudo obtener analisis (DeepSeek ni VADER disponibles)"}, status_code=503)
 
     db = get_db()
     if db is not None:

@@ -1,11 +1,12 @@
-"""Router para gestión e historial de simulaciones de inversión por usuario.
+"""Router para gestion e historial de simulaciones de inversion por usuario.
 
 Permite guardar, consultar y eliminar simulaciones realizadas por los usuarios,
 aplicando cifrado selectivo con Fernet para proteger los datos sensibles
-(montos, rendimientos, análisis IA y métricas).
+(montos, rendimientos, analisis IA y metricas).
 """
 from datetime import datetime
 from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -24,7 +25,7 @@ SIMULACION_CAMPOS_NUMERO = [
 
 
 class SimulacionRequest(BaseModel):
-    """Esquema de solicitud para registrar una nueva simulación."""
+    """Esquema de solicitud para registrar una nueva simulacion."""
     token: str
     moneda: str = ""
     monto: float = 0
@@ -45,16 +46,16 @@ class SimulacionRequest(BaseModel):
 @router.post("")
 @router.post("/")
 async def guardar_simulacion(req: SimulacionRequest):
-    """Guarda el resultado de una simulación vinculada al usuario autenticado.
+    """Guarda el resultado de una simulacion vinculada al usuario autenticado.
 
-    Cifra con Fernet los campos de texto y numéricos sensibles antes de
-    insertarlos en la colección ``simulaciones``.
+    Cifra con Fernet los campos de texto y numericos sensibles antes de
+    insertarlos en la coleccion ``simulaciones``.
     Returns:
         ``{"success", "id"}`` del documento creado.
     """
     sesion = await validar_token(req.token)
     if not sesion:
-        return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
+        return JSONResponse(content={"error": "Sesion invalida o expirada"}, status_code=401)
     db = get_db()
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
@@ -72,7 +73,9 @@ async def guardar_simulacion(req: SimulacionRequest):
             if v is not None:
                 doc[campo] = encrypt_num(v)
         res = await insert_dual("simulaciones", doc)
-        return {"success": True, "id": str(res)}
+        if res is None:
+            return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
+        return {"success": True, "id": str(res.inserted_id)}
     except Exception as e:
         print(f"Error guardando simulacion: {e}")
         return JSONResponse(content={"error": "No se pudo guardar la simulacion"}, status_code=500)
@@ -84,13 +87,13 @@ async def listar_simulaciones(token: str = Query("")):
     """Lista el historial de simulaciones del usuario (descifrando los campos).
 
     Args:
-        token: token de sesión del usuario.
+        token: token de sesion del usuario.
     Returns:
         ``{"success", "simulaciones": [...]}`` (hasta 50, ordenadas por fecha).
     """
     sesion = await validar_token(token)
     if not sesion:
-        return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
+        return JSONResponse(content={"error": "Sesion invalida o expirada"}, status_code=401)
     db = get_db()
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
@@ -113,16 +116,20 @@ async def listar_simulaciones(token: str = Query("")):
 
 @router.delete("/{sim_id}")
 async def eliminar_simulacion(sim_id: str, token: str = Query("")):
-    """Elimina una simulación del usuario (solo si le pertenece)."""
+    """Elimina una simulacion del usuario (solo si le pertenece)."""
     sesion = await validar_token(token)
     if not sesion:
-        return JSONResponse(content={"error": "Sesión inválida o expirada"}, status_code=401)
+        return JSONResponse(content={"error": "Sesion invalida o expirada"}, status_code=401)
     db = get_db()
     if db is None:
         return JSONResponse(content={"error": "Base de datos no disponible"}, status_code=503)
     try:
-        res = await delete_dual("simulaciones", {"_id": ObjectId(sim_id), "username_hash": hash_key(sesion["username"])})
-        if res == 0:
+        oid = ObjectId(sim_id)
+    except (InvalidId, TypeError):
+        return JSONResponse(content={"error": "Simulacion no encontrada"}, status_code=404)
+    try:
+        res = await delete_dual("simulaciones", {"_id": oid, "username_hash": hash_key(sesion["username"])})
+        if res is None or res.deleted_count == 0:
             return JSONResponse(content={"error": "Simulacion no encontrada"}, status_code=404)
         return {"success": True}
     except Exception as e:

@@ -21,6 +21,7 @@ FUENTES_FINANCIERAS = {
     "financial-post": "Financial Post",
 }
 
+
 async def obtener_noticias(
     query: str = "forex OR trading OR divisas",
     fuentes: list | None = None,

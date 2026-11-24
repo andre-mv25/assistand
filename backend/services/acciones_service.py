@@ -8,7 +8,7 @@ import asyncio
 import yfinance as yf
 
 ACCIONES_CANDIDATAS = {
-    # Tecnología
+    # Tecnologia
     "AAPL": "Apple Inc.",
     "MSFT": "Microsoft Corp.",
     "NVDA": "NVIDIA Corp.",
@@ -118,7 +118,7 @@ ACCIONES_CANDIDATAS = {
     "BBY": "Best Buy",
     "EBAY": "eBay Inc.",
     "ETSY": "Etsy Inc.",
-    # Energía
+    # Energia
     "XOM": "Exxon Mobil",
     "CVX": "Chevron Corp.",
     "COP": "ConocoPhillips",
@@ -202,7 +202,7 @@ ACCIONES_CANDIDATAS = {
     "TMUS": "T-Mobile US",
     "CMCSA": "Comcast Corp.",
     "CHTR": "Charter Communications",
-    # Bienes raíces
+    # Bienes raices
     "AMT": "American Tower",
     "PLD": "Prologis Inc.",
     "SPG": "Simon Property Group",
@@ -231,7 +231,7 @@ ACCIONES_CANDIDATAS = {
     "NIO": "NIO Inc. (ADR)",
     "HMC": "Honda Motor (ADR)",
     "TM": "Toyota Motor (ADR)",
-    # Latinoamérica
+    # Latinoamerica
     "WALMEX.MX": "Walmart de Mexico",
     "AMX": "America Movil (ADR)",
     "FMX": "Femsa (ADR)",
